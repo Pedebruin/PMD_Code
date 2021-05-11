@@ -32,8 +32,6 @@ set(0,'defaultTextInterpreter','latex'); %trying to set the default
     
     radius = 30;
     
-    
-    
     support = body(Pos, alpha_L, material, userSettings);
 
 %% Analysis
