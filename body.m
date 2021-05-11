@@ -45,7 +45,7 @@ classdef body < handle
             obj.Pos = R*obj.Pos;    % Only rotate, to allow for thermal expansion later on. 
         end
         
-        % schrink(), expand or contract with some temperature difference. 
+        % cool(), expand or contract with some temperature difference. 
         function cool(obj,T1)
             A = obj.userSettings.Amplification;
             
