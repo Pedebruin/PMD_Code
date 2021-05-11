@@ -17,7 +17,7 @@ set(0,'defaultTextInterpreter','latex'); %trying to set the default
 % Creating wafer at T0 = 273.15K (Default)
     waferRadius = 300;                             % mm
     material = 'Silicon';
-    alpha_L = @alphaSilicon;                    
+    alpha_L = @alphaSilicon;                        % Thermal expansion model                 
 
     % Create rough object 
     angles = linspace(-150, 150, 50);
@@ -46,7 +46,6 @@ end
 % Move to test
     wafer.move([0,0]',45);
   
-     
 % Make nice analysis plot
     figure('Name','Kinematic Coupling')
     hold on
