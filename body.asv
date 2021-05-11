@@ -46,12 +46,10 @@ classdef body < handle
         end
         
         % schrink(), expand or contract with some temperature difference. 
-        function cool(obj,T1)
+        function schrink(obj,T1)
             A = obj.userSettings.Amplification;
-            
-            alphaInt = integral(obj.alpha_L,obj.T,T1,'ArrayValued',true);
+            alphaInt = integral(obj.alpha_L,obj.T0,T1,'ArrayValued',true);
             obj.Pos = (1+A*alphaInt)*obj.Pos;
-            obj.T = T1;
         end
         
         % show(), Plot current configuration
@@ -62,7 +60,6 @@ classdef body < handle
             end
             Pos = obj.Pos + obj.pos;
             P = patch(axName,Pos(1,:),Pos(2,:),color);
-            alpha(0.3);
         end
    end
 end

@@ -9,7 +9,7 @@ set(0,'defaultTextInterpreter','latex'); %trying to set the default
     userSettings.animate = true;
         T0 = 273.15;    % K
         T1 = 0.0015;    % K
-    userSettings.PlotMaterials = true;
+        
     userSettings.Amplification = 1000; %Amplifies the schrink with a factor A for all bodies. 
 
     
@@ -38,14 +38,9 @@ set(0,'defaultTextInterpreter','latex'); %trying to set the default
     
 
 %% Analysis
-% Thermal expansion coefficients plot to test. 
-if userSettings.PlotMaterials == true
-    plotMaterials();
-end 
-
 % Move to test
-    wafer.move([0,0]',45);
-  
+    wafer.move([0,0]',0);
+    
      
 % Make nice analysis plot
     figure('Name','Kinematic Coupling')
@@ -58,7 +53,7 @@ end
     xlim([-waferRadius, waferRadius]*1.5);
     
     if userSettings.animate == true
-        N = 75;
+        N = 100;
     else
         N = 1;
     end
@@ -72,13 +67,18 @@ end
         Plots = [Plots, waferP];
         
         % Update text
-        Text = text(200 + wafer.pos(1),300+wafer.pos(2),['T = ',num2str(round(T,2)),' K']);
+        Text = text(300,300,['T = ',num2str(round(T,2)),' K']);
         Plots = [Plots,Text];
         
         % Housekeeping
         if userSettings.animate == true && T ~= T1
-            pause(0.03);
+            pause(0.02);
             delete(Plots);
         end
     end
      
+% Thermal expansion coefficients plot to test. 
+Plot = false;
+if Plot == true
+    plotMaterials();
+end
