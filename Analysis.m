@@ -35,8 +35,6 @@ set(0,'defaultTextInterpreter','latex'); %trying to set the default
     
     
     support = body(Pos, alpha_L, material, userSettings);
-    
-    
 
 %% Analysis
 % Thermal expansion coefficients plot to test. 
