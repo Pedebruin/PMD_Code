@@ -80,7 +80,7 @@ classdef body < handle
             
             obj.T = T1; % Update temperature
             
-            if norm(A*dd) >= norm(d) && norm(d) ~= 0
+            if A*dd >= d && d != [0,0
                 warnM = ['Amplification for ', obj.name,' too large!, It might invert in figure.'];
                 warning(warnM);
         

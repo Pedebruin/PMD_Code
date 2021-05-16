@@ -6,42 +6,60 @@ close all;
 set(0,'defaultTextInterpreter','latex'); %trying to set the default
 
 %% Settings
-    userSettings.animate = true;
+    userSettings.animate = false;
         T0 = 273.15;    % K
         T1 = 0.0015;    % K
-        
-    userSettings.Amplification = 1000; %Amplifies the schrink with a factor A for all bodies. 
+    userSettings.Amplification = 1000; %Amplifies the schrink with a factor A for all bodies.
+    userSettings.PlotMaterials = false;
+ 
 
     
-%% Initialisation
+%% Initialisation (Creating the objects)
 % Creating wafer at T0 = 273.15K (Default)
-    waferRadius = 300;                             % mm
+    waferRadius = 300;                              % mm
     material = 'Silicon';
-    alpha_L = @alphaSilicon;                    
+    alpha_L = @alphaSilicon;                        % Thermal expansion model   
+    color = 'k';
 
-    % Create rough object 
-    angles = linspace(-150, 150, 50);
+    % Create wafer object 
+    flatAngle = 30;
+    angles = linspace(-(180-flatAngle), 180-flatAngle, 50);
     Pos = waferRadius*[cosd(angles); sind(angles)];
 
-    wafer = body(Pos, alpha_L, material, userSettings);     % Actual wafer object
+    wafer = body(Pos, alpha_L, material,'k', userSettings);     % Actual wafer object
 
 % Creating support
     material = 'Copper';
     alpha_L = @alphaCopper;
+    pinRadius = 10;                                 % mm
+    pin1Angle = 90;                                 % Angle of pin 1 w.r.t. pos x axis
+    d = 40;                                         % Distance between pin 2&3
     
-    radius = 30;
+    % Pin locations
+    pos_pin1 = [cosd(pin1Angle), -sind(pin1Angle);
+                sind(pin1Angle), cosd(pin1Angle)]*[waferRadius+pinRadius,0]';
+    pos_pin2 = [waferRadius*cosd(flatAngle),d/2]';
+    pos_pin3 = [waferRadius*cosd(flatAngle),-d/2]';
+   
+    angles = linspace(0,360,25);
+    Pos_pin = pinRadius*[cosd(angles), sind(angles)];
     
     
+    pin1 = body(Pos_pin, pos_pin1 alpha_L, material, 'c', userSettings);
+    pin1.move(pos_pin1);
     
-    support = body(Pos, alpha_L, material, userSettings);
-    
-    
+    pin2 = body(Pos_pin, alpha_L, material, 'c', userSettings);
 
 %% Analysis
-% Move to test
+% Thermal expansion coefficients plot to test. 
+if userSettings.PlotMaterials == true
+    plotMaterials();
+end 
+
+% Test operations!
     wafer.move([0,0]',0);
-    
-     
+    wafer.TC = [300,0]';
+  
 % Make nice analysis plot
     figure('Name','Kinematic Coupling')
     hold on
@@ -53,7 +71,7 @@ set(0,'defaultTextInterpreter','latex'); %trying to set the default
     xlim([-waferRadius, waferRadius]*1.5);
     
     if userSettings.animate == true
-        N = 100;
+        N = 75;
     else
         N = 1;
     end
@@ -63,22 +81,17 @@ set(0,'defaultTextInterpreter','latex'); %trying to set the default
     for T = T_v
         % Update and plot wafer
         wafer.cool(T); %Cool from current temperature to T
-        waferP = wafer.show(gca, 'k');
+        waferP = wafer.show(gca);
         Plots = [Plots, waferP];
         
         % Update text
-        Text = text(300,300,['T = ',num2str(round(T,2)),' K']);
+        Text = text(200 + wafer.pos(1),300+wafer.pos(2),['T = ',num2str(round(T,2)),' K']);
         Plots = [Plots,Text];
         
         % Housekeeping
         if userSettings.animate == true && T ~= T1
-            pause(0.02);
+            pause(0.05);
             delete(Plots);
         end
     end
      
-% Thermal expansion coefficients plot to test. 
-Plot = false;
-if Plot == true
-    plotMaterials();
-end
