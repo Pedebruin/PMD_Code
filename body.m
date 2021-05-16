@@ -4,6 +4,7 @@ classdef body < handle
         material = 'testMaterial';      % Material of the body
         alpha_L;                        % Thermal expansion coefficient (requires a file)
         color;                          % Color of the body for plotting 'n shit
+        R;                              % Radius of the body (assuming everything is round)
         T0       = 273.15;              % Initial temperature
         T        = 273.15;              % Current temperature
         pos      = [0, 0]';             % Center position
@@ -11,12 +12,12 @@ classdef body < handle
         Pos      = 10*[-1 1 1 -1;       % Outline of the body at 0,0 ([x;y])
                        -1 -1 1 1];
         TC       = [0, 0]';             % Thermal center of the body
-        userSettings;
+        userSettings;                   % Struct to move settings around
     end
    
     methods
         % body(), Constructor (set parameters at initialisation)
-        function obj = body(name, Pos, pos, alpha_L, material, color, userSettings)
+        function obj = body(name, Pos, pos, alpha_L, material, R, color, userSettings)
             if ~isempty(name)
                 obj.name = name;
             end
@@ -32,6 +33,9 @@ classdef body < handle
                 else
                     error('alpha_L must be a handle to a function defining the thermal expansion coefficient for a given temperature!');
                 end
+            end
+            if ~isempty(R)
+                obj.R = R;
             end
             if ~isempty(material)
                 obj.material = material;
@@ -72,13 +76,14 @@ classdef body < handle
             A = obj.userSettings.Amplification; % Makes notation easier. 
             alphaInt = integral(obj.alpha_L,obj.T,T1,'ArrayValued',true); % Get NL alpha
             
-            d = obj.pos-obj.TC; % Vector from center to TC
-            dd = alphaInt*d;  % Change in length of d 
+            d = obj.pos-obj.TC;                 % Vector from center to TC
+            dd = alphaInt*d;                    % Change in length of d 
             
             obj.pos = obj.pos + A*dd;           % Move wafer in direction of TC with dd. 
-            obj.Pos = (1+A*alphaInt)*obj.Pos; % Actually schrink
+            obj.Pos = (1+A*alphaInt)*obj.Pos;   % Actually schrink
             
-            obj.T = T1; % Update temperature
+            obj.T = T1;                         % Update temperature
+            obj.R = (1+A*alphaInt)*obj.R;             % Update radius
             
             if norm(A*dd) >= norm(d) && norm(d) ~= 0
                 warnM = ['Amplification for ', obj.name,' too large!, It might invert in figure.'];
@@ -101,6 +106,10 @@ classdef body < handle
                 P2 = plot(axName,obj.TC(1),obj.TC(2),'*','Color',obj.color);
                 P3 = text(axName,obj.TC(1)+10,obj.TC(2),'TC','Color',obj.color);
                 P = [P, P2, P3];
+            end
+            if obj.userSettings.PlotNames == true
+                P4 = text(axName,obj.pos(1),obj.pos(2),obj.name,'HorizontalAlignment','center');
+                P = [P, P4];
             end
                 
             alpha(0.3);
