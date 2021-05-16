@@ -6,7 +6,7 @@ close all;
 set(0,'defaultTextInterpreter','latex'); %trying to set the default
 
 %% Settings
-    userSettings.animate = false;
+    userSettings.animate = true;
         T0 = 273.15;    % K
         T1 = 0.0015;    % K
     userSettings.Amplification = 100; %Amplifies the schrink with a factor A for all bodies.
@@ -61,7 +61,7 @@ end
 
 % Test operations!
     wafer.move([0,0]',0);
-    wafer.TC = [0,0]';
+    wafer.TC = [150,-150]';
   
 % Make nice analysis plot
     figure('Name','Kinematic Coupling')
