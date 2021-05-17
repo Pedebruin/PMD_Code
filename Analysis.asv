@@ -17,10 +17,9 @@ addpath('./materialModels');
     userSettings.animate = true;                % Animate the cooldown?
         userSettings.T0 = 273.15;               % [K] From staring temperature
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
-        userSettings.N = 100;                    % Amount of steps from T0 to T1
-        userSettings.maxIter = 10000;           % Maximum amount of loops to solve for d
+        userSettings.maxIter = 10000;             % Maximum amount of loops to solve for d
         userSettings.contactTol = 0;            % Tolerance to determine contact
-    userSettings.Amplification = 50;           % Amplifies the schrink with a factor A for all bodies.
+    userSettings.Amplification = 100;           % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotTC = false;                % Show the thermal center of the bodies?
@@ -91,7 +90,7 @@ addpath('./materialModels');
     ylim([-waferRadius, waferRadius]*1.4);
     
     if userSettings.animate == true
-        N = userSettings.N;
+        N = 75;
     else
         N = 1;
     end
@@ -107,6 +106,7 @@ addpath('./materialModels');
         % Model contact kinematically!
         if userSettings.PlotContact == true
             % Initialisations & Preliminaries
+            pin2pos = pin2.pos;
             Iter = 0;
             contact1 = false;
             contact23 = false;
@@ -115,7 +115,7 @@ addpath('./materialModels');
             pin3.color = 'c';
             
             % Look for direction to move the wafer
-            while contact1 || contact23 || Iter == 0                        % While there is still contact somewhere
+            while contact1 || contact23 || Iter == 0
                 % Contact 1
                 currDist1 = pin1.pos - wafer.pos;                           % Current distance between centers
                 contactDist1 = (wafer.R+pin1.R)*currDist1/norm(currDist1);  % Distance between centes for contact
@@ -130,11 +130,11 @@ addpath('./materialModels');
                 end
 
                 % Contact 2 & 3
-                currDist23 = abs(pin2.pos(1) - wafer.pos(1));                % Current distance between centers
+                currDist23 = abs(pin2pos(1) - wafer.pos(1));                % Current distance between centers
                 contactDist23 = wafer.R*cosd(flatAngle)+pin2.R;             % Distance between centers for contact
                 separation23 = currDist23-contactDist23;
                 if separation23 < 0
-                    d23 = (wafer.R*cosd(flatAngle)+pin2.R) - abs(pin2.pos(1)-wafer.pos(1));
+                    d23 = (wafer.R*cosd(flatAngle)+pin2.R) - abs(pin2pos(1)-wafer.pos(1));
                     d23 = [d23,0]';                                         % Assume 2&3 can only push in X direction. 
                     pin2.color = 'r';
                     pin3.color = 'r';
@@ -149,40 +149,34 @@ addpath('./materialModels');
                 wafer.move(d,0);                                            % Actually move wafer in one step
                 wafer.TC = wafer.TC+d;                                      % Move TC with it         
                 
-                if Iter >= userSettings.maxIter                             % Safeguard for infinite loop
+                if Iter >= userSettings.maxIter                             % Check 
                     warning(['No good wafer move found after ',num2str(Iter-1),' iterations!'])
                     break
                 end
                 
-                Iter = Iter+1;                                              % Update iteration variable
+                Iter = Iter+1;
             end
             
-            disp(['Move found after ',num2str(Iter-1),' iterations!'])      % If while is broken!
+            disp(['Move found after ',num2str(Iter-1),' iterations!'])
         end
         
         % Kill old bodies
-        if userSettings.animate == true 
+        if userSettings.animate == true && T ~= userSettings.T1
             pause(0.01);
             delete(Plots);
         end
         
         % Make new bodies
-            for i = 1:size(bodies,2)
-                Plots = [Plots, bodies{i}.show(gca)];
-            end      
-
+        for i = 1:size(bodies,2)
+            Plots = [Plots, bodies{i}.show(gca)];
+        end
+        
         % Update text
-        str1 = {['T = ',num2str(round(T,2)),' K']...
+        str = {['T = ',num2str(round(T,2)),' K']...
             ['sep1 = ',num2str(separation1),' mm'],...
             ['sep23 = ',num2str(separation23),' mm']};
-        Text1 = text(gca, -400,350,str1);
-        Plots = [Plots,Text1];
-        
-        str2 = {'Wafer.pos:',...
-                ['x = ',num2str(wafer.pos(1)),' mm'],...
-                ['y = ',num2str(wafer.pos(2)),' mm']};
-        Text2 = text(gca, 100, 350,str2);
-        Plots = [Plots,Text2];
+        Text = text(gca, 200,350,str);
+        Plots = [Plots,Text];
         
         % Housekeeping
         if userSettings.pauseStart == true && userSettings.animate == true

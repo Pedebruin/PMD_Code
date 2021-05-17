@@ -49,12 +49,12 @@ classdef body < handle
         end
 
         % move(), change position and orientation
-        function move(obj,pos,theta)
-            % pos:   position of center of body
+        function move(obj,d,theta)
+            % d:   Vector to move (relative to old position)
             % theta: orientation of body (cc positive)
             
             obj.theta = theta;
-            obj.pos = pos;
+            obj.pos = obj.pos+d;
 
             R = [cosd(obj.theta), -sind(obj.theta);
                 sind(obj.theta), cosd(obj.theta)];
