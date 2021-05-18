@@ -51,7 +51,7 @@ classdef body < handle
         % move(), change position and orientation
         function move(obj,d,theta)
             % d:   Vector to move (relative to old position)
-            % theta: orientation of body (cc positive)
+            % theta: orientation of body (cc positive, relative to old angle)
             
             obj.theta = theta;
             obj.pos = obj.pos+d;
@@ -91,6 +91,7 @@ classdef body < handle
         
             end
         end
+        
         % show(), Plot current configuration
         function P = show(obj,axName)
             if isempty(axName)
@@ -107,6 +108,8 @@ classdef body < handle
                 P3 = text(axName,obj.TC(1)+10,obj.TC(2),'TC','Color',obj.color);
                 P = [P, P2, P3];
             end
+            
+            % Plot names
             if obj.userSettings.PlotNames == true
                 P4 = text(axName,obj.pos(1),obj.pos(2),obj.name,'HorizontalAlignment','center');
                 P = [P, P4];

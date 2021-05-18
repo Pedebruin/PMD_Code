@@ -26,7 +26,6 @@ The script is set up in three main sections:
 The script is dependant on 
 body.m              % Class defenition
 plotMaterials.m     % Separate plot function for materials plot
-
 All material models:
     Material models available:
     @alphaSilicon           - Nonlinear silicon model
@@ -50,13 +49,13 @@ addpath('./materialModels');
     userSettings.Amplification = 50;            % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
-    userSettings.PlotTC = true;                % Show the thermal center of the bodies?
+    userSettings.PlotTC = false;                % Show the thermal center of the bodies?
     userSettings.PlotNames = true;              % Show the names of the bodies?
     userSettings.pauseStart = false;            % Pause before the start of the simulation
     userSettings.debug = false;
     
 %% Initialisation (Creating the objects)
-% Wafer 
+% Creating wafer
     name = 'Wafer';
     waferRadius = 300;                                                      % mm
     material = 'Silicon';
@@ -71,11 +70,11 @@ addpath('./materialModels');
 
     wafer = body(name, Pos, position, alpha_L, material, waferRadius, 'k', userSettings);     % Actual wafer object
 
-% Support pins
+% Creating support pins
     material = 'Copper';
     alpha_L = @alphaCopper;
     pinRadius = 40;                                                         % mm
-    pin1Angle = 90;                                                         % Angle of pin 1 w.r.t. pos x axis
+    pin1Angle = 45;                                                         % Angle of pin 1 w.r.t. pos x axis
     d_pins = 150;                                                           % Distance between pin 2&3
     
     % Pin locations
@@ -102,6 +101,10 @@ addpath('./materialModels');
         plotMaterials();
     end 
 
+% Test operations.
+    wafer.move([0,0]',0);
+    wafer.TC = [0,0]';
+  
 % Make nice analysis plot
     figure('Name','Kinematic Coupling')
     hold on
@@ -139,7 +142,6 @@ addpath('./materialModels');
             
             % Look for direction to move the wafer
             while contact1 || contact23 || Iter == 0                        % While there is still contact somewhere
-                
                 % Contact 1
                 currDist1 = pin1.pos - wafer.pos;                           % Current distance between centers
                 contactDist1 = (wafer.R+pin1.R)*currDist1/norm(currDist1);  % Distance between centes for contact
@@ -154,10 +156,10 @@ addpath('./materialModels');
                 end
 
                 % Contact 2 & 3
-                currDist23 = abs(pin2.pos(1) - wafer.pos(1));               % Current distance between centers
+                currDist23 = abs(pin2.pos(1) - wafer.pos(1));                % Current distance between centers
                 contactDist23 = wafer.R*cosd(flatAngle)+pin2.R;             % Distance between centers for contact
                 separation23 = currDist23-contactDist23;
-                if separation23 < 0                                         % Overlap!
+                if separation23 < 0
                     d23 = (wafer.R*cosd(flatAngle)+pin2.R) - abs(pin2.pos(1)-wafer.pos(1));
                     d23 = [d23,0]';                                         % Assume 2&3 can only push in X direction. 
                     pin2.color = 'r';
@@ -169,7 +171,7 @@ addpath('./materialModels');
                 end
                 
                 % Move wafer in determined direction
-                d = d1+d23;                                                 % Move to make (Might want to make this smarter)
+                d = d1+d23;                                                 % Move to make
                 wafer.move(d,0);                                            % Actually move wafer in one step
                 wafer.TC = wafer.TC+d;                                      % Move TC with it         
                 
