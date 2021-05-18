@@ -96,6 +96,8 @@ classdef body < handle
         function P = show(obj,axName)
             if isempty(axName)
                 figure()
+                hold on
+                axis equal
                 axName = gca;
             end
             Pos = obj.Pos + obj.pos;

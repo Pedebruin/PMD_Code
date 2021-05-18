@@ -8,8 +8,6 @@ Olivia Taal
 Jos Boetzkes
 Pim de Bruin
 
-
-
 The script is set up in three main sections:
 %% Settings
     Here, some settings for the script are determined. Mainly about the
@@ -37,8 +35,8 @@ All material models:
 %}
 clear;
 close all;
-set(0,'defaultTextInterpreter','latex'); %trying to set the default
-addpath('./materialModels');
+set(0,'defaultTextInterpreter','latex');                                    % Make everything look nice 
+addpath('./materialModels');                                                % Add material model folder
 
 %% Settings
     userSettings.animate = true;                % Animate the cooldown?
@@ -46,7 +44,6 @@ addpath('./materialModels');
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
         userSettings.maxIter = 10000;           % Maximum amount of loops to solve for d
-        userSettings.contactTol = 0;            % Tolerance to determine contact
     userSettings.Amplification = 50;            % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
@@ -66,7 +63,7 @@ addpath('./materialModels');
 
     % Create wafer object 
     flatAngle = 30;                                                         % Angle of the flat on the wafer
-    angles = linspace(-(180-flatAngle), 180-flatAngle, 50);                 % Array of angles
+    angles = linspace(-(180-flatAngle), 180-flatAngle, 100);                 % Array of angles
     Pos = waferRadius*[cosd(angles); sind(angles)];                         % Array of points to patch
 
     wafer = body(name, Pos, position, alpha_L, material, waferRadius, 'k', userSettings);     % Actual wafer object
@@ -85,7 +82,7 @@ addpath('./materialModels');
     pos_pin3 = [-waferRadius*cosd(flatAngle)-pinRadius,-d_pins/2]';
    
     % Pin shape
-    angles = linspace(0,359,50);                                            % Array of angles
+    angles = linspace(0,359,100);                                            % Array of angles
     Pos_pin = pinRadius*[cosd(angles); sind(angles)];                       % Array of points to patch
     
     % Create three pins
