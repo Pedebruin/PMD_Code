@@ -109,11 +109,11 @@ addpath('./materialModels');                                                % Ad
     hold on
     axis equal
     grid on
-    title(['Thermal cooldown analysis ',num2str(userSettings.Amplification),'X'])
+    title(['Thermal cooldown analysis ')
     xlabel('[mm]')
     ylabel('[mm]')
-    xlim([-waferRadius, waferRadius]*1.3);
-    ylim([-waferRadius, waferRadius]*1.3);
+    xlim([-waferRadius, waferRadius]*1.4);
+    ylim([-waferRadius, waferRadius]*1.4);
     
     if userSettings.animate == true
         N = userSettings.N;
