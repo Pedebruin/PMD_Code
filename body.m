@@ -1,4 +1,4 @@
-classdef body < handle
+classdef body < handle & dynamicprops
     properties
         name;                           % Name of the body object
         material = 'testMaterial';      % Material of the body

@@ -170,9 +170,9 @@ addpath('./materialModels');                                                % Ad
                     d = [0,0]';
                 end 
 
-                % Do bisectoion for pin 1
+                % Do bisectoion for 
                 if norm(d1) ~= 0                                             % If there's overlap somewhere!
-                    h = norm(d1);                                            % Initial step size
+                    h = norm(d);                                            % Initial step size
                     dir = 1;                                                % Initial step direction
  
                     IterBisection = 0;
@@ -180,7 +180,7 @@ addpath('./materialModels');                                                % Ad
                     oldSeparation23 = 0;
                     
                     % Bisection loop
-                    while abs(separation1) >= contactTol
+                    while abs(separation1) >= contactTol && abs(separation23) >= contactTol 
                         % Take a step
                         step = dir*d*h;
                         
