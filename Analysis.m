@@ -46,7 +46,7 @@ addpath('./materialModels');                                                % Ad
         userSettings.maxIter = 1000;           % Maximum amount of loops to solve for d
         userSettings.contactTol = 1e-10;        % mm to assume contact. 
     userSettings.Amplification = 50;            % Amplifies the schrink with a factor A for all bodies.
-    userSettings.PlotMaterials = false;         % Show separate material model plot?
+    userSettings.PlotMaterials = true;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotTC = false;                 % Show the thermal center of the bodies?
     userSettings.PlotNames = true;              % Show the names of the bodies?
