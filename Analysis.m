@@ -43,15 +43,15 @@ addpath('./materialModels');                                                % Ad
         userSettings.T0 = 273.15;               % [K] From staring temperature
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
-        userSettings.maxIter = 1000;           % Maximum amount of loops to solve for d
-        userSettings.contactTol = 1e-14;        % mm to assume contact. 
+        userSettings.contactTol = 1e-10;        % mm to assume contact. 
     userSettings.Amplification = 50;            % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
-    userSettings.PlotTC = false;                 % Show the thermal center of the bodies?
+    userSettings.PlotTC = false;                % Show the thermal center of the bodies?
     userSettings.PlotNames = true;              % Show the names of the bodies?
-    userSettings.pauseStart = false;            % Pause before the start of the simulation
-    userSettings.debug = false;                 % Debug mode? 
+    userSettings.plotObjective = false;         % FOR DEBUGGING, OBjective function of fminsearch
+    userSettings.plotd = true;                  % Plot the displacement direction d. 
+    userSettings.pauseStart = true;            % Pause before the start of the simulation
     
 %% Initialisation (Creating the objects)
 % Wafer 
@@ -70,6 +70,8 @@ addpath('./materialModels');                                                % Ad
     wafer = body(name, Pos, position, alpha_L, material, waferRadius, 'k', userSettings);     % Actual wafer object
     addprop(wafer,'flatAngle');
     wafer.flatAngle = flatAngle;
+    addprop(wafer,'d');
+    
 % Support pins
     material = 'Copper';
     alpha_L = @alphaCopper;
@@ -101,16 +103,18 @@ addpath('./materialModels');                                                % Ad
         plotMaterials();
     end 
 
-    
-    % wafer.move([0.5,-0.5]',0)
-    % Placement error^
+% Placement error!    
+    err = [0.5,-0.5]';                                                      % mm
+    wafer.move(userSettings.Amplification*err,0);
+    wafer.TC = wafer.TC + userSettings.Amplification*err;
+
     
 % Make nice analysis plot
     figure('Name',['Kinematic Coupling ',num2str(userSettings.Amplification),'X'])
     hold on
     axis equal
     grid on
-    title(['Thermal cooldown analysis ',num2str(userSettings.Amplification),'X'])
+    title(['Thermal cooldown analysis, A= ',num2str(userSettings.Amplification),'X'])
     xlabel('[mm]')
     ylabel('[mm]')
     xlim([-waferRadius, waferRadius]*1.3);
@@ -130,8 +134,28 @@ addpath('./materialModels');                                                % Ad
             bodies{i}.cool(T);
         end
 
+        
+        if userSettings.plotObjective == true
+                n = 50;
+                input = linspace(-5,5,n);
+                objectivePlot = zeros(n);
+                waferCopy = copy(wafer);
+                for i = 1:n
+                    for j = 1:n
+                        objectivePlot(i,j) = objective([input(i),input(j)]',waferCopy,pin1,pin2);
+                    end
+                end
+                figure();
+                xlabel('pin1 direction [mm]')
+                ylabel('pin23 direction [mm]')
+                zlabel('Total separation [mm]')
+                surf(input,input,objectivePlot)
+                pause(2);
+        end
+
+
         % Model contact kinematically!
-        if userSettings.PlotContact == true
+        if userSettings.PlotContact == true 
             % Initialisations & Preliminaries
             Iter = 0;
             contact1 = false;
@@ -164,62 +188,33 @@ addpath('./materialModels');                                                % Ad
                     d23 = [0,0]';
                     contact23 = false;           
                 end
-                
-                d = (d1+d23)/norm(d1+d23);                              % Direction to move in
-                if isnan(d)
+             
+                %Determine move!
+                if contact1 && contact23
+                    options = optimset('TolX',userSettings.contactTol,...
+                                       'TolFun',userSettings.contactTol);
+                    [d,fval,exitflag] = fminsearch(@(d)objective(d,wafer,pin1,pin2),[0,0]',options);
+                    if fval >= userSettings.contactTol
+                        warning(['Not properly optimised! fval = ',num2str(fval)])
+                    end
+                elseif contact1 && ~contact23
+                    d = d1;
+                elseif ~contact1 && contact23
+                    d = d23;
+                else
                     d = [0,0]';
-                end 
-
-                % Do bisectoion for pin 1
-                if norm(d1) ~= 0                                             % If there's overlap somewhere!
-                    h = norm(d1);                                            % Initial step size
-                    dir = 1;                                                % Initial step direction
- 
-                    IterBisection = 0;
-                    oldSeparation1 = 0;
-                    oldSeparation23 = 0;
-                    
-                    % Bisection loop
-                    while abs(separation1) >= contactTol
-                        % Take a step
-                        step = dir*d*h;
-                        
-                        wafer.move(step,0);
-                        wafer.TC = wafer.TC + step;
-                        
-                        % New separations
-                        [separation1,~] = sep1(wafer,pin1);
-                        [separation23,~] = sep23(wafer,pin2);
-                        
-                        % Switch directions when a contact is overshot,
-                        % also half the step size. 
-                        currSep = separation1*separation23;
-                        oldSep = oldSeparation1*oldSeparation23;
-                        if sign(oldSeparation1) ~= sign(separation1) && oldSep ~= 0       % If overshoot
-                            dir = -dir;
-                            h = h/2;
-                        end
-                        
-                        % Old separations
-                        oldSeparation1 = separation1;
-                        oldSeparation23 = separation23;
-                        
-                        % Housekeeping
-                        IterBisection = IterBisection+1;
-                        disp('Looooping')
-                        
-                        if IterBisection >= userSettings.maxIter                             % Safeguard for infinite loop
-                            warnmsg = ['No good wafer move found after ',num2str(IterBisection-1),' iterations!'];
-                            warning(warnmsg)
-                            break
-                        end
-                    end 
-                    disp(['Move found after ',num2str(IterBisection),' bisection iterations!'])      % If while is broken!  
-                end                                
+                end
                 
-                Iter = Iter+1;                                              % Update iteration variable
+                wafer.move(d,0);
+                wafer.TC = wafer.TC + d;
+                
+                % Save last d
+                if norm(d) ~= 0
+                    wafer.d = d;
+                end
+                
+                Iter = Iter+1;
             end
-            disp(['Move found after ',num2str(Iter-1),' tries!'])      % If while is broken!
         end
             
         
@@ -235,17 +230,33 @@ addpath('./materialModels');                                                % Ad
             end      
 
         % Update text
-        str1 = {['T = ',num2str(round(T,2)),' K']...
-            ['sep1 = ',num2str(separation1),' mm'],...
-            ['sep23 = ',num2str(separation23),' mm']};
-        Text1 = text(gca, -400,350,str1);
-        Plots = [Plots,Text1];
-
+        if userSettings.PlotContact == true
+            str1 = {['T = ',num2str(round(T,2)),' K']...
+                ['sep1 = ',num2str(separation1),' mm'],...
+                ['sep23 = ',num2str(separation23),' mm']};
+            Text1 = text(gca, -325,325,str1);
+            Plots = [Plots,Text1];
+        end
+        
         str2 = {'Wafer.pos:',...
                 ['x = ',num2str(wafer.pos(1)),' mm'],...
                 ['y = ',num2str(wafer.pos(2)),' mm']};
-        Text2 = text(gca, 100, 350,str2);
+        Text2 = text(gca, 100, 325,str2);
         Plots = [Plots,Text2];
+        
+        
+        % Update d arrow
+        if userSettings.plotd == true
+            d = wafer.d;
+            if norm(d) ~= 0
+                d = userSettings.Amplification*wafer.d/norm(d);
+                X = [wafer.pos(1), wafer.pos(1) + d(1)];
+                Y = [wafer.pos(2),wafer.pos(2) + d(2)];
+
+                dplot = plot(gca,X,Y,'r');
+                Plots = [Plots,dplot];
+            end
+        end
 
         % Housekeeping
         if userSettings.pauseStart == true && userSettings.animate == true
@@ -258,14 +269,18 @@ addpath('./materialModels');                                                % Ad
     
         
 %% Function defenitions
-    function ang = angDiff(u,v)
-        if size(u,1) == 2 && size(v,1)== 2
-            u = [u; 0];
-            v = [v; 0];
-        end
-        ang = rad2deg(atan2(norm(cross(u,v)),dot(u,v)));
-    end
+    function absSep = objective(d,wafer,pin1,pin23)
+        wafer.move(d,0);
+        
+        [separation1,~] = sep1(wafer,pin1);
+        [separation23,~] = sep23(wafer,pin23);
+        
 
+        absSep = abs(separation1) + abs(separation23);
+
+        wafer.move(-d,0);
+    end
+    
     function [separation1, d1] = sep1(wafer, pin1)
     %{
         This function checks the separation of pin1 and the wafer and

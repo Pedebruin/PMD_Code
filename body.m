@@ -1,4 +1,4 @@
-classdef body < handle & dynamicprops
+classdef body < handle & dynamicprops & matlab.mixin.Copyable
     properties
         name;                           % Name of the body object
         material = 'testMaterial';      % Material of the body
@@ -12,7 +12,9 @@ classdef body < handle & dynamicprops
         Pos      = 10*[-1 1 1 -1;       % Outline of the body at 0,0 ([x;y])
                        -1 -1 1 1];
         TC       = [0, 0]';             % Thermal center of the body
+        userData;
         userSettings;                   % Struct to move settings around
+        
     end
    
     methods
