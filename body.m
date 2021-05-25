@@ -115,7 +115,7 @@ classdef body < handle & dynamicprops & matlab.mixin.Copyable
             
             % Plot names
             if obj.userSettings.PlotNames == true
-                P4 = text(axName,obj.pos(1),obj.pos(2),obj.name,'HorizontalAlignment','center');
+                P4 = text(axName,obj.pos(1),obj.pos(2)-obj.R-10,obj.name,'HorizontalAlignment','center');
                 P = [P, P4];
             end
                 

@@ -44,7 +44,7 @@ addpath('./materialModels');                                                % Ad
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
         userSettings.contactTol = 1e-10;        % mm to assume contact. 
-    userSettings.Amplification = 50;            % Amplifies the schrink with a factor A for all bodies.
+    userSettings.Amplification = 1;            % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotTC = false;                % Show the thermal center of the bodies?
@@ -56,7 +56,7 @@ addpath('./materialModels');                                                % Ad
 %% Initialisation (Creating the objects)
 % Wafer 
     name = 'Wafer';
-    waferRadius = 300;                                                      % mm
+    waferRadius = 150;                                                      % mm
     material = 'Silicon';
     alpha_L = @alphaSilicon;                                                % Thermal expansion model   
     color = 'k';                                                            % Plot color
@@ -64,7 +64,7 @@ addpath('./materialModels');                                                % Ad
 
     % Create wafer object 
     flatAngle = 20;                                                         % Angle of the flat on the wafer
-    angles = linspace(-(180-flatAngle), 180-flatAngle, 100);                 % Array of angles
+    angles = linspace(-(180-flatAngle), 180-flatAngle, 100);                % Array of angles
     Pos = waferRadius*[cosd(angles); sind(angles)];                         % Array of points to patch
 
     wafer = body(name, Pos, position, alpha_L, material, waferRadius, 'k', userSettings);     % Actual wafer object
@@ -75,15 +75,21 @@ addpath('./materialModels');                                                % Ad
 % Support pins
     material = 'Copper';
     alpha_L = @alphaCopper;
-    pinRadius = 40;                                                         % mm
-    pin1Angle = 45;                                                         % Angle of pin 1 w.r.t. pos x axis
-    d_pins = 150;                                                           % Distance between pin 2&3
+    pinRadius = 10;                                                         % mm
+    pin1Angle = 15;                                                         % Angle of pin 1 w.r.t. pos x axis
+    d_pins = 50;                                                           % Distance between pin 2&3
     
     % Pin locations
     pos_pin1 = [cosd(pin1Angle), -sind(pin1Angle);
                 sind(pin1Angle), cosd(pin1Angle)]*[waferRadius+pinRadius,0]';
     pos_pin2 = [-waferRadius*cosd(flatAngle)-pinRadius,d_pins/2]';
     pos_pin3 = [-waferRadius*cosd(flatAngle)-pinRadius,-d_pins/2]';
+    
+    % PIN 4
+    initSpace = [0,0]';
+    pin4Angle = -45;
+    pos_pin4 = [cosd(pin4Angle), -sind(pin4Angle);
+                sind(pin4Angle), cosd(pin4Angle)]*[waferRadius+pinRadius,0]' + initSpace;
     
     % Pin shape
     angles = linspace(0,359,100);                                            % Array of angles
@@ -94,7 +100,9 @@ addpath('./materialModels');                                                % Ad
     pin2 = body('pin2', Pos_pin, pos_pin2, alpha_L, material, pinRadius, 'c', userSettings);
     pin3 = body('pin3', Pos_pin, pos_pin3, alpha_L, material, pinRadius, 'c', userSettings);
     
-    bodies = {wafer, pin1, pin2, pin3};                                     % Package bodies it for easy looping
+    pin4 = body('pin4', Pos_pin, pos_pin4, alpha_L, material, pinRadius, 'c', userSettings); 
+    
+    bodies = {wafer, pin1, pin2, pin3, pin4};                                     % Package bodies it for easy looping
     
     
 %% Termal cooldown analysis
@@ -117,8 +125,8 @@ addpath('./materialModels');                                                % Ad
     title(['Thermal cooldown analysis, A= ',num2str(userSettings.Amplification),'X'])
     xlabel('[mm]')
     ylabel('[mm]')
-    xlim([-waferRadius, waferRadius]*1.3);
-    ylim([-waferRadius, waferRadius]*1.3);
+    xlim([-waferRadius, waferRadius]*1.5);
+    ylim([-waferRadius, waferRadius]*1.5);
     
     if userSettings.animate == true
         N = userSettings.N;
@@ -229,19 +237,21 @@ addpath('./materialModels');                                                % Ad
                 Plots = [Plots, bodies{i}.show(gca)];
             end      
 
+        separation4 = sep1(wafer,pin4);
         % Update text
         if userSettings.PlotContact == true
             str1 = {['T = ',num2str(round(T,2)),' K']...
                 ['sep1 = ',num2str(separation1),' mm'],...
-                ['sep23 = ',num2str(separation23),' mm']};
-            Text1 = text(gca, -325,325,str1);
+                ['sep23 = ',num2str(separation23),' mm'],...
+                ['sep4 = ',num2str(separation4),' mm']};
+            Text1 = text(gca, -200,175,str1);
             Plots = [Plots,Text1];
         end
         
         str2 = {'Wafer.pos:',...
                 ['x = ',num2str(wafer.pos(1)),' mm'],...
                 ['y = ',num2str(wafer.pos(2)),' mm']};
-        Text2 = text(gca, 100, 325,str2);
+        Text2 = text(gca, 100, 175,str2);
         Plots = [Plots,Text2];
         
         
