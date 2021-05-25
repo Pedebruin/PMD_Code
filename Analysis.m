@@ -51,7 +51,7 @@ addpath('./materialModels');                                                % Ad
     userSettings.PlotNames = true;              % Show the names of the bodies?
     userSettings.plotObjective = false;         % FOR DEBUGGING, OBjective function of fminsearch
     userSettings.plotd = true;                  % Plot the displacement direction d. 
-    userSettings.pauseStart = true;            % Pause before the start of the simulation
+    userSettings.pauseStart = false;            % Pause before the start of the simulation
     
 %% Initialisation (Creating the objects)
 % Wafer 
@@ -69,7 +69,7 @@ addpath('./materialModels');                                                % Ad
 
     wafer = body(name, Pos, position, alpha_L, material, waferRadius, 'k', userSettings);     % Actual wafer object
     addprop(wafer,'flatAngle');
-    wafer.flatAngle = flatAngle;
+    wafer.userData = flatAngle;
     addprop(wafer,'d');
     
 % Support pins
@@ -301,7 +301,7 @@ addpath('./materialModels');                                                % Ad
     %}
 
         currDist23 = abs(pin2.pos(1) - wafer.pos(1));                       % Current distance between centers
-        contactDist23 = wafer.R*cosd(wafer.flatAngle)+pin2.R;                     % Distance between centers for contact
+        contactDist23 = wafer.R*cosd(wafer.userData)+pin2.R;                     % Distance between centers for contact
         separation23 = currDist23-contactDist23;
         d23 = contactDist23 - norm(currDist23);                             % Assume 2&3 can only push in X direction. 
         d23 = [d23,0]'; 
