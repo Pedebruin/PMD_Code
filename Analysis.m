@@ -49,7 +49,7 @@ addpath('./materialModels');                                                % Ad
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotContactLines = true;
     userSettings.PlotTC = false;                % Show the thermal center of the bodies?
-    userSettings.PlotNames = false;              % Show the names of the bodies?
+    userSettings.PlotNames = true;              % Show the names of the bodies?
     userSettings.plotObjective = false;         % FOR DEBUGGING, OBjective function of fminsearch
     userSettings.plotd = true;                  % Plot the displacement direction d. 
     userSettings.pauseStart = false;            % Pause before the start of the simulation

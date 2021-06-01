@@ -4,9 +4,9 @@ h = 120         % milimeters waferRadius*cos(flatAngle)
 L_12 = 100      % milimeters d_pins!
 
 % Variables
-theta = deg2rad(0)          % degrees Angle of Pin1
-phi = deg2rad(45)           % degrees Angle of nesting force
-F_n = 1.5                   % Newton  Nesting force angle
+theta = deg2rad(0)          % degrees
+phi = deg2rad(45)           % degrees
+F_n = 1.5                   % Newton
 mu = 0.4                    % Friction coefficient between copper and silicon (approximately)
 
 % Solve matrix to get F1, F2 and F3 
