@@ -255,8 +255,8 @@ addpath('./materialModels');                                                % Ad
                 
                 % If pin 2 contact
                 if strcmp(pin2.color,'r')
-                    pin2Cone = frictionCone(pin2.pos, pin2.pos, pin2.pos,5);
-                    pin3Cone = frictionCone(pin3.pos, pin3.pos, pin2.pos,5);
+                    pin2Cone = frictionCone(pin2.pos, [0,pin2.pos(2)]', pin2.pos,5);
+                    pin3Cone = frictionCone(pin3.pos, [0,pin3.pos(2)]', pin3.pos,5);
                     Plots = [Plots,pin2Cone,pin3Cone];
                 end
                 
@@ -375,7 +375,7 @@ addpath('./materialModels');                                                % Ad
     function cone = frictionCone(center1, center2, coneCenter,coneAngle)
     
         % Determine cone direction
-        if sum(center1 ~= coneCenter) && sum(center2 == coneCenter)
+        if ~isequal(center1, coneCenter) &&  isequal(center2 == coneCenter)
             coneDir = center1;
         elseif sum(center1 == coneCenter) && sum(center2 ~= coneCenter)
             coneDir = center2;
@@ -397,13 +397,14 @@ addpath('./materialModels');                                                % Ad
         coneLine1y = coneLine1.YData;
         coneLine2y = coneLine2.YData;
        
-        p = patch([coneLine1x(1),coneCenter(1),coneLine2x(1)],[coneLine1y(1),coneCenter(2),coneLine2y(1)],'g');
+        p = patch([coneLine1x(1),coneCenter(1),coneLine2x(1)],[coneLine1y(1),coneCenter(2),coneLine2y(1)],...
+            'b','faceAlpha',0.1,'edgeAlpha',0);
         
         
         % Contact action line
         Line = infLine(center1, center2, '--k');
         
-        cone = [Line, coneLine1, coneLine2, p1];
+        cone = [Line, coneLine1, coneLine2, p];
     end
     
     function rotMatrix = R(rotAngle)

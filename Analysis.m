@@ -255,8 +255,8 @@ addpath('./materialModels');                                                % Ad
                 
                 % If pin 2 contact
                 if strcmp(pin2.color,'r')
-                    pin2Cone = frictionCone(pin2.pos, pin2.pos, pin2.pos,5);
-                    pin3Cone = frictionCone(pin3.pos, pin3.pos, pin2.pos,5);
+                    pin2Cone = frictionCone(pin2.pos, [0,pin2.pos(2)]', pin2.pos,5);
+                    pin3Cone = frictionCone(pin3.pos, [0,pin3.pos(2)]', pin3.pos,5);
                     Plots = [Plots,pin2Cone,pin3Cone];
                 end
                 
@@ -352,7 +352,7 @@ addpath('./materialModels');                                                % Ad
         This function draws an infinite line between two points specified
         by center1 and center2 of color 'linespec'
     %}
-        if center1 == center2
+        if isequal(center1, center2)
             Line = yline(center1(2),linespec);
         else
             
@@ -375,12 +375,10 @@ addpath('./materialModels');                                                % Ad
     function cone = frictionCone(center1, center2, coneCenter,coneAngle)
     
         % Determine cone direction
-        if sum(center1 ~= coneCenter) && sum(center2 == coneCenter)
-            coneDir = center1;
-        elseif sum(center1 == coneCenter) && sum(center2 ~= coneCenter)
+        if isequal(center1, coneCenter)
             coneDir = center2;
-        else
-            coneDir = [0,coneCenter(2)];        % For the horizontal cones
+        else 
+            coneDir = center1;
         end
         
         % Temporary points through which to draw the cone lines
@@ -397,7 +395,12 @@ addpath('./materialModels');                                                % Ad
         coneLine1y = coneLine1.YData;
         coneLine2y = coneLine2.YData;
        
-        p = patch([coneLine1x(1),coneCenter(1),coneLine2x(1)],[coneLine1y(1),coneCenter(2),coneLine2y(1)],...
+        if coneDir(1) < coneCenter(1)
+            d = 1;
+        else
+            d = 2;
+        end
+        p = patch([coneLine1x(d),coneCenter(1),coneLine2x(d)],[coneLine1y(d),coneCenter(2),coneLine2y(d)],...
             'b','faceAlpha',0.1,'edgeAlpha',0);
         
         
