@@ -16,16 +16,19 @@ function plotMaterials()
         alphaCL(i) = alphaCopper_Linear(T(i));
         alphaZ(i) = alphaZero(T(i));
     end
-
+    d = 2;
     figure('Name','alpha Silicon')
     hold on
-    plot(T,alphaS,'k-');
-    plot(T,alphaSL,'k--');
-    plot(T,alphaC,'-','Color',[0.9290, 0.6940, 0.1250]);
-    plot(T,alphaCL,'--','Color',[0.9290, 0.6940, 0.1250]);
-    plot(T,alphaZ,'Color',[0.4940, 0.1840, 0.5560]);    
+    plot(T,alphaS,'-','Color',[0.6350, 0.0780, 0.1840],'LineWidth',d);
+    plot(T,alphaSL,'--','Color',[0.6350, 0.0780, 0.1840],'LineWidth',d);
+    plot(T,alphaC,'-','Color',[0.9290, 0.6940, 0.1250],'LineWidth',d);
+    plot(T,alphaCL,'--','Color',[0.9290, 0.6940, 0.1250],'LineWidth',d);
+    %plot(T,alphaZ,'Color','k');    
+    xline(300,':k','LineWidth',d);
+    grid on
     title('Thermal expansion coefficient models')
     xlabel('Temperature [K]')
     ylabel('$$\alpha_L$$')
-    legend('Silicon','Silicon Linear','Copper','Copper Linear','Zero')
+    legend('Nonlinear silicon','Linear silicon','Nonlinear copper','Linear copper','Initial temperature')
+    
 end

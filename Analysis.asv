@@ -397,14 +397,13 @@ addpath('./materialModels');                                                % Ad
         coneLine1y = coneLine1.YData;
         coneLine2y = coneLine2.YData;
        
-        p = patch([coneLine1x(1),coneCenter(1),coneLine2x(1)],[coneLine1y(1),coneCenter(2),coneLine2y(1)],...
-            'b','faceAlpha',0.1,'edgeAlpha',0);
+        p = patch([coneLine1x(1),coneCenter(1),coneLine2x(1)],[coneLine1y(1),coneCenter(2),coneLine2y(1)],'g');
         
         
         % Contact action line
         Line = infLine(center1, center2, '--k');
         
-        cone = [Line, coneLine1, coneLine2, p];
+        cone = [Line, coneLine1, coneLine2, p1];
     end
     
     function rotMatrix = R(rotAngle)
