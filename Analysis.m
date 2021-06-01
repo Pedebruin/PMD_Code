@@ -39,12 +39,12 @@ set(0,'defaultTextInterpreter','latex','defaultAxesFontSize',12);               
 addpath('./materialModels');                                                % Add material model folder
 
 %% Settings
-    userSettings.animate = true;                % Animate the cooldown?
+    userSettings.animate = false;                % Animate the cooldown?
         userSettings.T0 = 273.15;               % [K] From staring temperature
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
         userSettings.contactTol = 1e-10;        % mm to assume contact. 
-    userSettings.Amplification = 50;            % Amplifies the schrink with a factor A for all bodies.
+    userSettings.Amplification = 1;            % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotContactLines = true;
@@ -78,20 +78,18 @@ addpath('./materialModels');                                                % Ad
     material = 'Copper';
     alpha_L = @alphaCopper;
     pinRadius = 10;                                                         % mm
-    pin1Angle = 10;                                                         % Angle of pin 1 w.r.t. pos x axis
+    pin1Angle = 45;                                                         % Angle of pin 1 w.r.t. pos x axis
     d_pins = 50;                                                           % Distance between pin 2&3
     
     % Pin locations
-    pos_pin1 = [cosd(pin1Angle), -sind(pin1Angle);
-                sind(pin1Angle), cosd(pin1Angle)]*[waferRadius+pinRadius,0]';
+    pos_pin1 = R(pin1Angle)*[waferRadius+pinRadius,0]';
     pos_pin2 = [-waferRadius*cosd(flatAngle)-pinRadius,d_pins/2]';
     pos_pin3 = [-waferRadius*cosd(flatAngle)-pinRadius,-d_pins/2]';
     
     % PIN 4
     initSpace = [0,0]';
     pin4Angle = -45;
-    pos_pin4 = [cosd(pin4Angle), -sind(pin4Angle);
-                sind(pin4Angle), cosd(pin4Angle)]*[waferRadius+pinRadius,0]' + initSpace;
+    pos_pin4 = R(pin4Angle)*[waferRadius+pinRadius,0]' + initSpace;
     
     % Pin shape
     angles = linspace(0,359,100);                                            % Array of angles
@@ -249,14 +247,14 @@ addpath('./materialModels');                                                % Ad
             if userSettings.PlotContactLines == true
                 % If pin 1 contact
                 if strcmp(pin1.color,'r')
-                    pin1Cone = frictionCone(pin1.pos, wafer.pos, pin1.pos, 5);
+                    pin1Cone = frictionCone(pin1.pos, wafer.pos, pin1.pos, 15);
                     Plots = [Plots,pin1Cone];
                 end
                 
                 % If pin 2 contact
                 if strcmp(pin2.color,'r')
-                    pin2Cone = frictionCone(pin2.pos, [0,pin2.pos(2)]', pin2.pos,5);
-                    pin3Cone = frictionCone(pin3.pos, [0,pin3.pos(2)]', pin3.pos,5);
+                    pin2Cone = frictionCone(pin2.pos, [0,pin2.pos(2)]', pin2.pos,15);
+                    pin3Cone = frictionCone(pin3.pos, [0,pin3.pos(2)]', pin3.pos,15);
                     Plots = [Plots,pin2Cone,pin3Cone];
                 end
                 
@@ -411,7 +409,7 @@ addpath('./materialModels');                                                % Ad
     end
     
     function rotMatrix = R(rotAngle)
-    rotMatrix = [cosd(rotAngle) sind(rotAngle)
-            -sind(rotAngle) cosd(rotAngle)];
+    rotMatrix = [cosd(rotAngle) -sind(rotAngle)
+            sind(rotAngle) cosd(rotAngle)];
     end
     
