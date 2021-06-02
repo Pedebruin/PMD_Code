@@ -4,7 +4,9 @@ classdef body < handle & dynamicprops & matlab.mixin.Copyable
         material = 'testMaterial';      % Material of the body
         alpha_L;                        % Thermal expansion coefficient (requires a file)
         color;                          % Color of the body for plotting 'n shit
+        h;                              % Height of the body
         R;                              % Radius of the body (assuming everything is round)
+        rho;
         T0       = 273.15;              % Initial temperature
         T        = 273.15;              % Current temperature
         pos      = [0, 0]';             % Center position

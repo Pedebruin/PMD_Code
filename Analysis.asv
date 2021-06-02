@@ -46,33 +46,32 @@ g = 9.813;
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
         userSettings.contactTol = 1e-10;        % mm to assume contact. 
-    userSettings.Amplification = 50;            % Amplifies the schrink with a factor A for all bodies.
+    userSettings.Amplification = 75;            % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
-    userSettings.PlotKinematics = true;         % Show kinematic analysis lines and cones and stuff
-    userSettings.nestingForce = 'F_n';          % Either 'F_n' or 'F_f' to choose between friction or external nesting force. 
+    userSettings.PlotKinematics = true;
+        userSettings.nestingForce = 'F_f';      % Either 'F_n' or 'F_f' to choose between friction or external nesting force. 
     userSettings.PlotTC = false;                % Show the thermal center of the bodies?
-    userSettings.PlotNames = false;             % Show the names of the bodies?
+    userSettings.PlotNames = false;              % Show the names of the bodies?
     userSettings.plotObjective = false;         % FOR DEBUGGING, OBjective function of fminsearch
-    userSettings.plotd = false;                 % Plot the displacement direction d (only when plotKinematics is false)
-    userSettings.pauseStart = true;            % Pause before the start of the simulation
+    userSettings.plotd = false;                  % Plot the displacement direction d. 
+    userSettings.pauseStart = false;            % Pause before the start of the simulation
            
 %% Important parameters
     % Placement error
-    err = [0,0]';                            % mm 
+    err = [0,-1]';                               % mm
     
     % Nesting force
     F_n_mag = 1;                                % Magnitude of nesting force
-    F_n_ang = -25;                              % Angle of nesting force w.r.t. pos x axis
+    F_n_ang = -45;                              % Angle of nesting force w.r.t. pos x axis
     
     % Friction coefficient between copper and silicon
     mu = 0.4;                                   % Friction coefficient silicon and copper. 
     
     % Pin 1 angle
-    pin1Angle = 130;                             % Angle of pin 1 w.r.t. pos x axis
+    pin1Angle = 90;                             % Angle of pin 1 w.r.t. pos x axis
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
 %% Initialisation (Creating the objects)
 % Wafer 
     name = 'Wafer';
@@ -284,10 +283,9 @@ g = 9.813;
                     F_n = F_n;
                 elseif strcmp(userSettings.nestingForce,'F_f')
                     if norm(wafer.d) ~= norm([0,0])
-                        movementLine = infLine(ax1, wafer.pos,wafer.pos-wafer.d,'--r');
+                        movementLine = infLine(ax1, wafer.pos,-wafer.d,'--r');
                         Plots = [Plots, movementLine];
-                        F_f = wafer.weight*g*mu*wafer.d/norm(wafer.d);
-                        F_n = F_f;
+                        F_n = wafer.weight*g*mu*wafer.d/norm(wafer.d);
                     else
                         F_n = [0,0]'; 
                     end
@@ -327,12 +325,7 @@ g = 9.813;
                 ['y = ',num2str(wafer.pos(2)),' mm'],...
                 [''],...
                 ['Weight = ',num2str(wafer.weight),' Kg'],...
-                ['F_{nesting} = ',num2str(norm(F_n)),' N'],...
-                ['F_{friction} = ',num2str(norm(wafer.weight*g*mu)),' N'],...
-                [''],...
-                ['F_1 = ',num2str(F(1,1)),' N'],...
-                ['F_2 = ',num2str(F(2,1)),' N'],...
-                ['F_3 = ',num2str(F(3,1)),' N']};
+                ['F_n = ',num2str(norm(F_n)),' N']};
             Text1 = annotation('textbox', [0.65, 0.2, 0.3, 0.65], 'String',str1,'FitBoxToText','on');
             Plots = [Plots,Text1];
         end
