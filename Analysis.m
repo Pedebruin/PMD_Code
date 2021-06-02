@@ -46,16 +46,16 @@ g = 9.813;
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
         userSettings.contactTol = 1e-10;        % mm to assume contact. 
-    userSettings.Amplification = 50;            % Amplifies the schrink with a factor A for all bodies.
+    userSettings.Amplification = 1;            % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotKinematics = true;         % Show kinematic analysis lines and cones and stuff
-    userSettings.nestingForce = 'F_n';          % Either 'F_n' or 'F_f' to choose between friction or external nesting force. 
+    userSettings.nestingForce = 'F_f';          % Either 'F_n' or 'F_f' to choose between friction or external nesting force. 
     userSettings.PlotTC = false;                % Show the thermal center of the bodies?
     userSettings.PlotNames = false;             % Show the names of the bodies?
     userSettings.plotObjective = false;         % FOR DEBUGGING, OBjective function of fminsearch
     userSettings.plotd = false;                 % Plot the displacement direction d (only when plotKinematics is false)
-    userSettings.pauseStart = true;            % Pause before the start of the simulation
+    userSettings.pauseStart = false;            % Pause before the start of the simulation
            
 %% Important parameters
     % Placement error
@@ -295,20 +295,18 @@ g = 9.813;
                 
                 
                 F = Force_analysis_f(wafer, pin1, pin2, pin3, F_n, mu);
-                coneAngle1 = atand(F(1,2)/F(1,1));
-                coneAngle2 = atand(F(2,2)/F(2,1));
-                coneAngle3 = atand(F(3,2)/F(3,1));
+                coneAngle = atand(mu);                                      % Sorry, didn't know it was this easy...
                 
                 % If pin 1 contact
                 if strcmp(pin1.color,'r')
-                    pin1Cone = frictionCone(ax1, pin1.pos, wafer.pos, pin1.pos, coneAngle1);
+                    pin1Cone = frictionCone(ax1, pin1.pos, wafer.pos, pin1.pos, coneAngle);
                     Plots = [Plots,pin1Cone];
                 end
                 
                 % If pin 2 contact
                 if strcmp(pin2.color,'r')
-                    pin2Cone = frictionCone(ax1, pin2.pos, [0,pin2.pos(2)]', pin2.pos,coneAngle2);
-                    pin3Cone = frictionCone(ax1, pin3.pos, [0,pin3.pos(2)]', pin3.pos,coneAngle3);
+                    pin2Cone = frictionCone(ax1, pin2.pos, [0,pin2.pos(2)]', pin2.pos,coneAngle);
+                    pin3Cone = frictionCone(ax1, pin3.pos, [0,pin3.pos(2)]', pin3.pos,coneAngle);
                     Plots = [Plots,pin2Cone,pin3Cone];
                 end
             end
