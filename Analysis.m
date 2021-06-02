@@ -39,13 +39,13 @@ set(0,'defaultTextInterpreter','latex','defaultAxesFontSize',12);               
 addpath('./materialModels');                                                % Add material model folder
 
 %% Settings
-    userSettings.animate = false;                % Animate the cooldown?
+    userSettings.animate = true;                % Animate the cooldown?
         userSettings.T0 = 273.15;               % [K] From staring temperature
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
         userSettings.contactTol = 1e-10;        % mm to assume contact. 
-    userSettings.Amplification = 1;            % Amplifies the schrink with a factor A for all bodies.
-    userSettings.PlotMaterials = false;         % Show separate material model plot?
+    userSettings.Amplification = 25;            % Amplifies the schrink with a factor A for all bodies.
+    userSettings.PlotMaterials = true;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotContactLines = true;
     userSettings.PlotTC = false;                % Show the thermal center of the bodies?
