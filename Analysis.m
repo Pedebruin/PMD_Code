@@ -59,7 +59,7 @@ g = 9.813;
            
 %% Important parameters
     % Placement error
-    err = [0,0]';                            % mm 
+    err = [0,0]';                               % mm 
     
     % Nesting force
     F_n_mag = 1;                                % Magnitude of nesting force
@@ -69,7 +69,7 @@ g = 9.813;
     mu = 0.4;                                   % Friction coefficient silicon and copper. 
     
     % Pin 1 angle
-    pin1Angle = 130;                             % Angle of pin 1 w.r.t. pos x axis
+    pin1Angle = 130;                            % Angle of pin 1 w.r.t. pos x axis
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -299,14 +299,14 @@ g = 9.813;
                 
                 % If pin 1 contact
                 if strcmp(pin1.color,'r')
-                    pin1Cone = frictionCone(ax1, pin1.pos, wafer.pos, pin1.pos, coneAngle);
+                    pin1Cone = frictionCone(ax1, pin1, pin1.pos, wafer.pos, pin1.pos, coneAngle);
                     Plots = [Plots,pin1Cone];
                 end
                 
                 % If pin 2 contact
                 if strcmp(pin2.color,'r')
-                    pin2Cone = frictionCone(ax1, pin2.pos, [0,pin2.pos(2)]', pin2.pos,coneAngle);
-                    pin3Cone = frictionCone(ax1, pin3.pos, [0,pin3.pos(2)]', pin3.pos,coneAngle);
+                    pin2Cone = frictionCone(ax1, pin2, pin2.pos, [0,pin2.pos(2)]', pin2.pos,coneAngle);
+                    pin3Cone = frictionCone(ax1, pin3, pin3.pos, [0,pin3.pos(2)]', pin3.pos,coneAngle);
                     Plots = [Plots,pin2Cone,pin3Cone];
                 end
             end
@@ -422,7 +422,7 @@ g = 9.813;
         end
     end
     
-    function cone = frictionCone(ax,center1, center2, coneCenter, coneAngle)
+    function cone = frictionCone(ax,pin,center1, center2, coneCenter, coneAngle)
     
         % Determine cone direction
         if isequal(center1, coneCenter)
@@ -430,6 +430,8 @@ g = 9.813;
         else 
             coneDir = center1;
         end
+        
+        coneCenter = coneCenter + pin.R*(coneDir-coneCenter)/norm(coneDir-coneCenter);
         
         % Temporary points through which to draw the cone lines
         tempPoint1 = coneCenter + 10*R(coneAngle)*(coneDir - coneCenter);
