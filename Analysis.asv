@@ -55,7 +55,8 @@ g = 9.813;
     userSettings.PlotNames = true;             % Show the names of the bodies?
     userSettings.plotObjective = false;         % FOR DEBUGGING, OBjective function of fminsearch
     userSettings.plotd = false;                 % Plot the displacement direction d (only when plotKinematics is false)
-    userSettings.pauseStart = true;            % Pause before the start of the simulation
+    userSettings.plotRing = true;               % Show the ring around the pins? (maybe for sanity check or somehing)
+    userSettings.pauseStart = false;            % Pause before the start of the simulation
            
 %% Important parameters
     % Placement error
@@ -74,7 +75,7 @@ g = 9.813;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialisation (Creating the objects)
-% Wafer 
+% Wafer!
     name = 'Wafer';
     waferRadius = 150;                                                      % mm
     material = 'Silicon';
@@ -99,7 +100,7 @@ g = 9.813;
     wafer.d = [0,0]';
     wafer.userData = flatAngle;
     
-% Support pins
+% Support!
     material = 'Copper';
     alpha_L = @alphaCopper;
     pinRadius = 10;                                                         % mm
@@ -129,17 +130,19 @@ g = 9.813;
     pin4.theta = pin4Angle;
     
     % Create Ring
-    ringInnerRadius = 155;
-    ringOuterRadis = 175;
-    Pos_ring = Pos_wafer/waferRadius*ringInnerRadius;
-    pos_ring = [0,0];
+    ringInnerRadius = 160;
+    ringOuterRadius = 180;
+    Pos_ring = [Pos_pin/pinRadius*ringInnerRadius, Pos_pin/pinRadius*ringOuterRadius];
+    pos_ring = [0,0]';
     
-    
-    ring = body('ring', Pos_ring, pos_pin4, alpha_L, material, pinRadius, 'c', userSettings); 
+      
+    ring = body('ring', Pos_ring, pos_ring, alpha_L, material, ringOuterRadius, [0.9290, 0.6940, 0.1250], userSettings); 
 
-    
-    bodies = {wafer, pin1, pin2, pin3 };                                     % Package bodies it for easy looping
-
+    if userSettings.plotRing == true
+        bodies = {wafer, pin1, pin2, pin3, ring};                                     % Package bodies it for easy looping
+    else
+        bodies = {wafer, pin1, pin2, pin3};
+    end
 %% Termal cooldown analysis
 % Thermal expansion coefficients plot? 
     if userSettings.PlotMaterials == true

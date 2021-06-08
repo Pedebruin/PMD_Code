@@ -42,11 +42,11 @@ g = 9.813;
 
 %% Settings
     userSettings.animate = true;                % Animate the cooldown?
-        userSettings.T0 = 273.15;               % [K] From staring temperature
+        userSettings.T0 = 300;                  % [K] From staring temperature
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
         userSettings.contactTol = 1e-10;        % mm to assume contact. 
-    userSettings.Amplification = 100;            % Amplifies the schrink with a factor A for all bodies.
+    userSettings.Amplification = 1;            % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotKinematics = true;         % Show kinematic analysis lines and cones and stuff
@@ -55,6 +55,7 @@ g = 9.813;
     userSettings.PlotNames = true;             % Show the names of the bodies?
     userSettings.plotObjective = false;         % FOR DEBUGGING, OBjective function of fminsearch
     userSettings.plotd = false;                 % Plot the displacement direction d (only when plotKinematics is false)
+    userSettings.plotRing = true;               % Show the ring around the pins? (maybe for sanity check or somehing)
     userSettings.pauseStart = false;            % Pause before the start of the simulation
            
 %% Important parameters
@@ -74,7 +75,7 @@ g = 9.813;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialisation (Creating the objects)
-% Wafer 
+% Wafer!
     name = 'Wafer';
     waferRadius = 150;                                                      % mm
     material = 'Silicon';
@@ -99,10 +100,10 @@ g = 9.813;
     wafer.d = [0,0]';
     wafer.userData = flatAngle;
     
-% Support pins
+% Support!
     material = 'Copper';
     alpha_L = @alphaCopper;
-    pinRadius = 10;                                                         % mm
+    pinRadius = 12;                                                         % mm
     d_pins = 50;                                                            % Distance between pin 2&3
    
     % Pin locations
@@ -135,11 +136,13 @@ g = 9.813;
     pos_ring = [0,0]';
     
       
-    ring = body('ring', Pos_ring, pos_ring, alpha_L, material, ringOuterRadius, [0.9290, 0.6940, 0.1250], userSettings); 
+    ring = body('Ring', Pos_ring, pos_ring, alpha_L, material, ringOuterRadius, [0.9290, 0.6940, 0.1250], userSettings); 
 
-    
-    bodies = {wafer, pin1, pin2, pin3, ring};                                     % Package bodies it for easy looping
-
+    if userSettings.plotRing == true
+        bodies = {wafer, pin1, pin2, pin3, ring};                                     % Package bodies it for easy looping
+    else
+        bodies = {wafer, pin1, pin2, pin3};
+    end
 %% Termal cooldown analysis
 % Thermal expansion coefficients plot? 
     if userSettings.PlotMaterials == true
