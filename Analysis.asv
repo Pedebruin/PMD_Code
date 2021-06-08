@@ -46,7 +46,7 @@ g = 9.813;
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
         userSettings.contactTol = 1e-10;        % mm to assume contact. 
-    userSettings.Amplification = 100;            % Amplifies the schrink with a factor A for all bodies.
+    userSettings.Amplification = 1;            % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotKinematics = true;         % Show kinematic analysis lines and cones and stuff
@@ -55,7 +55,7 @@ g = 9.813;
     userSettings.PlotNames = true;             % Show the names of the bodies?
     userSettings.plotObjective = false;         % FOR DEBUGGING, OBjective function of fminsearch
     userSettings.plotd = false;                 % Plot the displacement direction d (only when plotKinematics is false)
-    userSettings.pauseStart = false;            % Pause before the start of the simulation
+    userSettings.pauseStart = true;            % Pause before the start of the simulation
            
 %% Important parameters
     % Placement error
@@ -129,16 +129,16 @@ g = 9.813;
     pin4.theta = pin4Angle;
     
     % Create Ring
-    ringInnerRadius = 160;
-    ringOuterRadius = 180;
-    Pos_ring = [Pos_pin/pinRadius*ringInnerRadius, Pos_pin/pinRadius*ringOuterRadius];
-    pos_ring = [0,0]';
+    ringInnerRadius = 155;
+    ringOuterRadis = 175;
+    Pos_ring = Pos_wafer/waferRadius*ringInnerRadius;
+    pos_ring = [0,0];
     
-      
-    ring = body('ring', Pos_ring, pos_ring, alpha_L, material, ringOuterRadius, [0.9290, 0.6940, 0.1250], userSettings); 
+    
+    ring = body('ring', Pos_ring, pos_pin4, alpha_L, material, pinRadius, 'c', userSettings); 
 
     
-    bodies = {wafer, pin1, pin2, pin3, ring};                                     % Package bodies it for easy looping
+    bodies = {wafer, pin1, pin2, pin3 };                                     % Package bodies it for easy looping
 
 %% Termal cooldown analysis
 % Thermal expansion coefficients plot? 
