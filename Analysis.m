@@ -60,7 +60,7 @@ g = 9.813;
            
 %% Important parameters
     % Placement error
-    err = [0.1,-0.1]';                               % mm 
+    err = [0,0]';                               % mm 
     
     % Nesting force
     F_n_mag = 1;                                % Magnitude of nesting force
@@ -72,14 +72,13 @@ g = 9.813;
     % Pin 1 angle
     pin1Angle = 130;                            % Angle of pin 1 w.r.t. pos x axis
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialisation (Creating the objects)
 % Wafer!
     name = 'Wafer';
     waferRadius = 150;                                                      % mm
     material = 'Silicon';
-    alpha_L = @alphaSilicon;                                                % Thermal expansion model   
+    alpha_L = @alphaSilicon_Linear;                                                % Thermal expansion model   
     color = 'k';                                                            % Plot color
     position = [0,0]';                                                      % Initial position
 
@@ -96,7 +95,7 @@ g = 9.813;
     wafer.h = 775e-6;   % Thickness of wafer
     wafer.rho = 2330;   % Density silicon [kg/m3]
     wafer.flatAngle = flatAngle;
-    wafer.weight = wafer.R/1000*pi^2*wafer.h*wafer.rho;
+    wafer.weight = (wafer.R/1000)^2*pi*wafer.h*wafer.rho;
     wafer.d = [0,0]';
     wafer.userData = flatAngle;
     
