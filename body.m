@@ -7,8 +7,8 @@ classdef body < handle & dynamicprops & matlab.mixin.Copyable
         h;                              % Height of the body
         R;                              % Radius of the body (assuming everything is round)
         rho;
-        T0       = 273.15;              % Initial temperature
-        T        = 273.15;              % Current temperature
+        T0;              % Initial temperature
+        T;              % Current temperature
         pos      = [0, 0]';             % Center position
         theta    = 0;                   % Angle with the horizontal (cc positive) [rad]
         Pos      = 10*[-1 1 1 -1;       % Outline of the body at 0,0 ([x;y])
@@ -50,6 +50,8 @@ classdef body < handle & dynamicprops & matlab.mixin.Copyable
             if ~isempty(userSettings)
                 obj.userSettings = userSettings;
             end
+            obj.T0 = userSettings.T0;
+            obj.T = obj.T0;
         end
 
         % move(), change position and orientation

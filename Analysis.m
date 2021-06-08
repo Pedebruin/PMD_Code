@@ -60,7 +60,7 @@ g = 9.813;
            
 %% Important parameters
     % Placement error
-    err = [0,0]';                               % mm 
+    err = [0.1,-0.1]';                               % mm 
     
     % Nesting force
     F_n_mag = 1;                                % Magnitude of nesting force
@@ -121,10 +121,10 @@ g = 9.813;
     Pos_pin = pinRadius*[cosd(angles); sind(angles)];                       % Array of points to patch
     
     % Create three pins
-    pin1 = body('pin1', Pos_pin, pos_pin1, alpha_L, material, pinRadius, 'c', userSettings);    
-    pin2 = body('pin2', Pos_pin, pos_pin2, alpha_L, material, pinRadius, 'c', userSettings);
-    pin3 = body('pin3', Pos_pin, pos_pin3, alpha_L, material, pinRadius, 'c', userSettings);
-    pin4 = body('pin4', Pos_pin, pos_pin4, alpha_L, material, pinRadius, 'c', userSettings); 
+    pin1 = body('pin 1', Pos_pin, pos_pin1, alpha_L, material, pinRadius, 'c', userSettings);    
+    pin2 = body('pin 2', Pos_pin, pos_pin2, alpha_L, material, pinRadius, 'c', userSettings);
+    pin3 = body('pin 3', Pos_pin, pos_pin3, alpha_L, material, pinRadius, 'c', userSettings);
+    pin4 = body('pin 4', Pos_pin, pos_pin4, alpha_L, material, pinRadius, 'c', userSettings); 
     
     pin1.theta = pin1Angle;
     pin4.theta = pin4Angle;
@@ -244,8 +244,8 @@ g = 9.813;
              
                 %Determine move!
                 if contact1 && contact23
-                    options = optimset('TolX',userSettings.contactTol,...
-                                       'TolFun',userSettings.contactTol,...
+                    options = optimset('TolX',contactTol,...
+                                       'TolFun',contactTol,...
                                        'maxFunEvals',1000);
                     [d,fval,exitflag] = fminsearch(@(d)objective(d,wafer,pin1,pin2),[0,0]',options);
                     if fval >= userSettings.contactTol
