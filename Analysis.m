@@ -50,12 +50,12 @@ g = 9.813;
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotKinematics = true;         % Show kinematic analysis lines and cones and stuff
-    userSettings.nestingForce = 'F_f';          % Either 'F_n' or 'F_f' to choose between friction or external nesting force. 
+    userSettings.nestingForce = 'YES';          % Either 'F_n' or 'F_f' to choose between friction or external nesting force. 
     userSettings.PlotTC = false;                % Show the thermal center of the bodies?
     userSettings.PlotNames = true;             % Show the names of the bodies?
     userSettings.plotObjective = false;         % FOR DEBUGGING, OBjective function of fminsearch
     userSettings.plotd = false;                 % Plot the displacement direction d (only when plotKinematics is false)
-    userSettings.plotRing = true;               % Show the ring around the pins? (maybe for sanity check or somehing)
+    userSettings.plotRing = false;               % Show the ring around the pins? (maybe for sanity check or somehing)
     userSettings.pauseStart = false;            % Pause before the start of the simulation
            
 %% Important parameters
@@ -70,7 +70,7 @@ g = 9.813;
     mu = 0.4;                                   % Friction coefficient silicon and copper. 
     
     % Pin 1 angle
-    pin1Angle = 130;                            % Angle of pin 1 w.r.t. pos x axis
+    pin1Angle = 125;                            % Angle of pin 1 w.r.t. pos x axis
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialisation (Creating the objects)
@@ -290,19 +290,18 @@ g = 9.813;
             if userSettings.PlotKinematics == true
                 
                 % Plot & calculate nesting force line
-                if strcmp(userSettings.nestingForce,'F_n')
-                    nestingForceLine = infLine(ax1,[0,0],F_n,'--g');
+                if strcmp(userSettings.nestingForce,'YES')
+                    F_f = wafer.weight*g*mu*wafer.d/norm(wafer.d);
+                    
+                    movementLine = infLine(ax1,[0,0],wafer.d,'--g');
+                    Plots = [Plots,movementLine];
+                    
+                    nestingForceLine = infLine(ax1,[0,0],F_n,'--m');
                     Plots = [Plots,nestingForceLine];
-                    F_n = F_n;
-                elseif strcmp(userSettings.nestingForce,'F_f')
-                    if norm(wafer.d) ~= norm([0,0])
-                        movementLine = infLine(ax1, wafer.pos,wafer.pos-wafer.d,'--r');
-                        Plots = [Plots, movementLine];
-                        F_f = wafer.weight*g*mu*wafer.d/norm(wafer.d);
-                        F_n = F_f;
-                    else
-                        F_n = [0,0]'; 
-                    end
+                    
+                    F_n_eff = F_n' + F_f;
+                    effectiveForceLine = infLine(ax1,[0,0],F_n_eff,'--r');
+                    Plots = [Plots,effectiveForceLine];
                 end
                 
                 
