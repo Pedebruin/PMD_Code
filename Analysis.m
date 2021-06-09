@@ -78,7 +78,7 @@ g = 9.813;
     name = 'Wafer';
     waferRadius = 150;                                                      % mm
     material = 'Silicon';
-    alpha_L = @alphaSilicon_Linear;                                                % Thermal expansion model   
+    alpha_L = @alphaSilicon;                                                % Thermal expansion model   
     color = 'k';                                                            % Plot color
     position = [0,0]';                                                      % Initial position
 
