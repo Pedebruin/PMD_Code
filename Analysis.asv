@@ -41,22 +41,22 @@ addpath('./materialModels');                                                % Ad
 g = 9.813;
 
 %% Settings
-    userSettings.animate = true;                % Animate the cooldown?
+    userSettings.animate = false;                % Animate the cooldown?
         userSettings.T0 = 300;                  % [K] From staring temperature
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
         userSettings.contactTol = 1e-10;        % mm to assume contact. 
-    userSettings.Amplification = 100;           % Amplifies the schrink with a factor A for all bodies.
+    userSettings.Amplification = 1;            % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotPin1Force = true;
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotKinematics = true;         % Show kinematic analysis lines and cones and stuff
     userSettings.nestingForce = 'YES';          % Either 'F_n' or 'F_f' to choose between friction or external nesting force. 
     userSettings.PlotTC = false;                % Show the thermal center of the bodies?
-    userSettings.PlotNames = true;              % Show the names of the bodies?
+    userSettings.PlotNames = true;             % Show the names of the bodies?
     userSettings.plotObjective = false;         % FOR DEBUGGING, OBjective function of fminsearch
     userSettings.plotd = false;                 % Plot the displacement direction d (only when plotKinematics is false)
-    userSettings.plotRing = false;              % Show the ring around the pins? (maybe for sanity check or somehing)
+    userSettings.plotRing = false;               % Show the ring around the pins? (maybe for sanity check or somehing)
     userSettings.pauseStart = false;            % Pause before the start of the simulation
            
 %% Important parameters
@@ -374,7 +374,7 @@ g = 9.813;
 if userSettings.PlotPin1Force == true
     N = userSettings.N;
     theta_old = pin1.theta;
-    theta = linspace(0,rad2deg(pi),N);
+    theta = linspace(0,2*pi,N);
     F = zeros(3,N);
     for i = 1:N
         pin1.theta = theta(i);
@@ -383,15 +383,15 @@ if userSettings.PlotPin1Force == true
     end
     pin1.theta = theta_old;
     figure()
-    semilogy(theta,F(1,:))
     hold on
     grid on
-    semilogy(theta,F(2,:))
-    semilogy(theta,F(3,:))
+    plot(theta/(2*pi)*180,F(1,:))
+    plot(theta/(2*pi)*180,F(2,:))
+    plot(theta/(2*pi)*180,F(3,:))
     legend('F_1','F_2','F_3')
     xlabel('$$\theta$$ [deg]')
     ylabel('$$F_1$$ [N]')
-    title('Pin forces versus pin angle')
+    title('Force pin 1 versus pin angle')
 end
         
 %% Function defenitions
