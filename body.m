@@ -7,6 +7,7 @@ classdef body < handle & dynamicprops & matlab.mixin.Copyable
         h;                              % Height of the body
         R;                              % Radius of the body (assuming everything is round)
         rho;
+        pos0 = [0, 0]';
         T0;              % Initial temperature
         T;              % Current temperature
         pos      = [0, 0]';             % Center position
@@ -16,7 +17,7 @@ classdef body < handle & dynamicprops & matlab.mixin.Copyable
         TC       = [0, 0]';             % Thermal center of the body
         userData;
         userSettings;                   % Struct to move settings around
-        
+        backup;
     end
    
     methods
@@ -54,6 +55,28 @@ classdef body < handle & dynamicprops & matlab.mixin.Copyable
             obj.T = obj.T0;
         end
 
+        function save(obj)
+            obj.backup = copy(obj);
+        end
+        function reset(obj)
+            obj.name = obj.backup.name;
+            obj.material = obj.backup.material;
+            obj.alpha_L = obj.backup.alpha_L;
+            obj.color = obj.backup.color;
+            obj.h = obj.backup.h;
+            obj.R = obj.backup.R;
+            obj.rho = obj.backup.rho;
+            obj.pos0 = obj.backup.pos0;
+            obj.T0 = obj.backup.T0;
+            obj.T = obj.backup.T;
+            obj.pos = obj.backup.pos;
+            obj.theta = obj.backup.theta;
+            obj.Pos = obj.backup.Pos;
+            obj.TC =obj.backup.TC;
+            obj.userData = obj.backup.userData;
+            obj.userSettings = obj.backup.userSettings;
+        end
+        
         % move(), change position and orientation
         function move(obj,d,theta)
             % d:   Vector to move (relative to old position)
@@ -65,6 +88,22 @@ classdef body < handle & dynamicprops & matlab.mixin.Copyable
             R = [cosd(obj.theta), -sind(obj.theta);
                 sind(obj.theta), cosd(obj.theta)];
             obj.Pos = R*obj.Pos;    % Only rotate, to allow for thermal expansion later on. 
+        end
+        
+        function movePin(obj,theta)
+            % Rotate back to 0 
+            R = [cosd(-obj.theta), -sind(-obj.theta);
+                sind(-obj.theta), cosd(-obj.theta)];
+            obj.pos = R*obj.pos;
+            
+            % Rotate to new angle
+            R = [cosd(theta), -sind(theta);
+                sind(theta), cosd(theta)];
+            obj.pos = R*obj.pos;
+        
+            % Update theta
+            obj.theta = theta;
+            
         end
         
         % cool(), expand or contract with some temperature difference. 

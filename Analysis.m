@@ -41,24 +41,27 @@ addpath('./materialModels');                                                % Ad
 g = 9.813;
 
 %% Settings
+    userSettings.Plot  = true;                  % Do we even want to generate the plot??
     userSettings.animate = true;                % Animate the cooldown?
         userSettings.T0 = 300;                  % [K] From staring temperature
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
         userSettings.contactTol = 1e-10;        % mm to assume contact. 
-    userSettings.Amplification = 100;           % Amplifies the schrink with a factor A for all bodies.
-    userSettings.PlotPin1Force = true;
+    userSettings.Amplification = 1;           % Amplifies the schrink with a factor A for all bodies.
+    userSettings.PlotPin1Force = false;          % Plot the force in pin 1 as a function of pin1 angle.
     userSettings.PlotMaterials = false;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotKinematics = true;         % Show kinematic analysis lines and cones and stuff
-    userSettings.nestingForce = 'YES';          % Either 'F_n' or 'F_f' to choose between friction or external nesting force. 
+    userSettings.nestingForce = 'YES';          % Plot the nesting force lines? (external, friction and effective) 
     userSettings.PlotTC = false;                % Show the thermal center of the bodies?
     userSettings.PlotNames = true;              % Show the names of the bodies?
-    userSettings.plotObjective = false;         % FOR DEBUGGING, OBjective function of fminsearch
+    userSettings.plotObjective = false;         % FOR DEBUGGING, Objective function of fminsearch
     userSettings.plotd = false;                 % Plot the displacement direction d (only when plotKinematics is false)
     userSettings.plotRing = false;              % Show the ring around the pins? (maybe for sanity check or somehing)
     userSettings.pauseStart = false;            % Pause before the start of the simulation
-           
+    userSettings.metaAnalysis = false;           % [MAY TAKE LONG] Run analysis loop multiple times??? (k to be precise) ALso turns off other setings!
+        userSettings.k = 20;                    % Amount of meta analysis loops
+        
 %% Important parameters
     % Placement error
     err = [0,0]';                               % mm 
@@ -71,7 +74,7 @@ g = 9.813;
     mu = 0.4;                                   % Friction coefficient silicon and copper. 
     
     % Pin 1 angle
-    pin1Angle = 125;                            % Angle of pin 1 w.r.t. pos x axis
+    pin1Angle = 100;                            % Angle of pin 1 w.r.t. pos x axis
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialisation (Creating the objects)
@@ -99,6 +102,11 @@ g = 9.813;
     wafer.weight = (wafer.R/1000)^2*pi*wafer.h*wafer.rho;
     wafer.d = [0,0]';
     wafer.userData = flatAngle;
+    
+% Placement error!    
+    wafer.move(userSettings.Amplification*err,0);
+    wafer.TC = wafer.TC + userSettings.Amplification*err;
+    wafer.pos0 = userSettings.Amplification*err;
     
 % Support!
     material = 'Copper';
@@ -144,232 +152,296 @@ g = 9.813;
         bodies = {wafer, pin1, pin2, pin3};
     end
     
+    
+% Save initial body configuration
+    for i = 1:length(bodies)
+        bodies{i}.save()
+    end
+    
+    
 %% Termal cooldown analysis
 % Thermal expansion coefficients plot? 
     if userSettings.PlotMaterials == true
         plotMaterials();
     end 
-
-% Placement error!    
-    wafer.move(userSettings.Amplification*err,0);
-    wafer.TC = wafer.TC + userSettings.Amplification*err;
-
+    
 % Nesting force (Through center)
     F_n = F_n_mag*[cosd(F_n_ang), sind(F_n_ang)];
     if F_n_mag <= wafer.weight*g*mu && strcmp(userSettings.nestingForce,'F_n')
         warning(['Nesting force lower then friction force on wafer! ',num2str(F_n_mag),' < ',num2str(wafer.weight*g*mu)])
     end
-    
-% Make nice analysis plot
-    name = 'Kinematic Coupling ';
-    figure('Name',name)
-    sgtitle([name, 'A = ', num2str(userSettings.Amplification),'X, ','$$',userSettings.nestingForce,'$$'])
-    subplot(2,3,[1 2 4 5])
-        ax1 = gca;
-        hold on
-        axis equal
-        grid on
-        xlabel(ax1,'[mm]')
-        ylabel(ax1,'[mm]')
-        xlim(ax1,[-waferRadius, waferRadius]*1.5);
-        ylim(ax1,[-waferRadius, waferRadius]*1.5);
 
+
+    
+% If metaAnalysis is turned on!
+    if userSettings.metaAnalysis == true
+        % Things i would like to metaAnalyse
+        k = userSettings.k;
+        theta = linspace(5,150,k);
+        displacements = zeros(2,k);
         
+        % Turn off things that will be annoying when this is ran often
+        userSettings.Plot = false;
+        userSettings.animate = false;
+        userSettings.PlotMaterials = false;
+        userSettings.plotObjective = false;
+        userSettings.pauseStart = false;
+        userSettings.PlotPin1Force = false;
+    else
+        k = 1;
+        theta = pin1.theta;
+        displacements = [0,0]';
+    end
+    
+% Are we animating??    
     if userSettings.animate == true
         N = userSettings.N;
     else
         N = 1;
-    end
-    
-    T_v = linspace(userSettings.T0, userSettings.T1, N+1);
-    Plots = [];
-    for T = T_v
-        % Cool down       
-        for i = 1:size(bodies,2)
-            bodies{i}.cool(T);
-        end
-
-        % Plot the objective function to show convexity!
-        if userSettings.plotObjective == true
-                n = 50;
-                input = linspace(-5,5,n);
-                objectivePlot = zeros(n);
-                waferCopy = copy(wafer);
-                for i = 1:n
-                    for j = 1:n
-                        objectivePlot(i,j) = objective([input(i),input(j)]',waferCopy,pin1,pin2);
-                    end
-                end
-                figure();
-                xlabel('pin1 direction [mm]')
-                ylabel('pin23 direction [mm]')
-                zlabel('Total separation [mm]')
-                surf(input,input,objectivePlot)
-                pause(2);
-        end
-
-        % Model contact kinematically!
-        if userSettings.PlotContact == true 
-            % Initialisations & Preliminaries
-            Iter = 0;
-            contact1 = false;
-            contact23 = false;
-            pin1.color = 'c';
-            pin2.color = 'c';
-            pin3.color = 'c';
-            contactTol = userSettings.contactTol;
-            
-            % Look for direction to move the wafer
-            while contact1 || contact23 || Iter == 0                        % While there is still contact somewhere
-                
-                % Detect contact 1 and find direction
-                [separation1, d1] = sep1(wafer,pin1);                       % Homecooked function
-                if separation1 < -contactTol                    % Overlap! 
-                    pin1.color = 'r';
-                    contact1 = true;
-                else                                                        % No overlap
-                    d1 = [0,0]';
-                    contact1 = false;
-                end
-
-                % Detect contact 2 & 3 and find direction
-                [separation23,d23] = sep23(wafer,pin2);                     % Homecooked function
-                if separation23 < -contactTol                   % Overlap!
-                    pin2.color = 'r';
-                    pin3.color = 'r';
-                    contact23 = true;
-                else % No overlap
-                    d23 = [0,0]';
-                    contact23 = false;           
-                end
-             
-                %Determine move!
-                if contact1 && contact23
-                    options = optimset('TolX',contactTol,...
-                                       'TolFun',contactTol,...
-                                       'maxFunEvals',1000);
-                    [d,fval,exitflag] = fminsearch(@(d)objective(d,wafer,pin1,pin2),[0,0]',options);
-                    if fval >= userSettings.contactTol
-                        warning(['Not properly optimised! fval = ',num2str(fval)])
-                    end
-                elseif contact1 && ~contact23
-                    d = d1;
-                elseif ~contact1 && contact23
-                    d = d23;
-                else
-                    d = [0,0]';
-                end
-                
-                wafer.move(d,0);
-                wafer.TC = wafer.TC + d;
-                
-                % Save last d
-                if norm(d) ~= 0
-                    wafer.d = d;
-                end
-                
-                Iter = Iter+1;
-            end
-        end
-            
-        % Kill old bodies
-        if userSettings.animate == true  
-            pause(0.001)
-            delete(Plots);
-        elseif userSettings.animate == false
-            if size(Plots,2) >= 2
-                delete(Plots(end-1:end));
-            end
+    end  
+% Loops & Loops & Loops & Loops & Loops & Loops & Loops Etc..
+    for l = 1:k
+        % Set bodies back to initial conditions
+        for i = 1:length(bodies)
+            bodies{i}.reset()
         end
         
-        % Make new bodies
-            % Bodies
+        % Move pin 1 to required position
+        pin1.movePin(theta(l));
+        
+        
+        % Make nice analysis plot
+        if userSettings.Plot == true
+            name = 'Kinematic Coupling ';
+            %close(findobj('Name',name));    % If already open, close
+            
+            figure('Name',name)
+            sgtitle([name, 'A = ', num2str(userSettings.Amplification),'X'])
+            subplot(2,3,[1 2 4 5])
+                ax1 = gca;
+                hold on
+                axis equal
+                grid on
+                xlabel(ax1,'[mm]')
+                ylabel(ax1,'[mm]')
+                xlim(ax1,[-wafer.R, wafer.R]*1.5);
+                ylim(ax1,[-wafer.R, wafer.R]*1.5);
+        end
+        T_v = linspace(userSettings.T0, userSettings.T1, N+1);
+        Plots = [];
+        
+        % Actual cooldown loop!
+        for T = T_v
+            % Cool down       
             for i = 1:size(bodies,2)
-                Plots = [Plots, bodies{i}.show(ax1)];
-            end    
-            
-            % Cones and lines
-            if userSettings.PlotKinematics == true
-                
-                % Plot & calculate nesting force line
-                if strcmp(userSettings.nestingForce,'YES')
-                    F_f = wafer.weight*g*mu*wafer.d/norm(wafer.d);
-                    
-                    movementLine = infLine(ax1,[0,0],wafer.d,'--g');
-                    Plots = [Plots,movementLine];
-                    
-                    nestingForceLine = infLine(ax1,[0,0],F_n,'--m');
-                    Plots = [Plots,nestingForceLine];
-                    
-                    F_n_eff = F_n' + F_f;
-                    effectiveForceLine = infLine(ax1,[0,0],F_n_eff,'--r');
-                    Plots = [Plots,effectiveForceLine];
-                end
-                
-                
-                F = Force_analysis_f(wafer, pin1, pin2, pin3, F_n, mu);
-                coneAngle = atand(mu);                                      % Sorry, didn't know it was this easy...
-                
-                % If pin 1 contact
-                if strcmp(pin1.color,'r')
-                    pin1Cone = frictionCone(ax1, pin1, pin1.pos, wafer.pos, pin1.pos, coneAngle);
-                    Plots = [Plots,pin1Cone];
-                end
-                
-                % If pin 2 contact
-                if strcmp(pin2.color,'r')
-                    pin2Cone = frictionCone(ax1, pin2, pin2.pos, [0,pin2.pos(2)]', pin2.pos,coneAngle);
-                    pin3Cone = frictionCone(ax1, pin3, pin3.pos, [0,pin3.pos(2)]', pin3.pos,coneAngle);
-                    Plots = [Plots,pin2Cone,pin3Cone];
-                end
+                bodies{i}.cool(T);
             end
-        
-        % Update text
-        separation4 = sep1(wafer,pin4);
-        if userSettings.PlotContact == true
-            xlim = get(ax1,'XLim');
-            ylim = get(ax1,'YLim');
-            str1 = {['T = ',num2str(round(T,2)),' K']...
-                ['sep1 = ',num2str(separation1),' mm'],...
-                ['sep23 = ',num2str(separation23),' mm'],...
-                [''],...
-                ['Wafer position :'],...
-                ['x = ',num2str(wafer.pos(1)),' mm'],...
-                ['y = ',num2str(wafer.pos(2)),' mm'],...
-                [''],...
-                ['Weight = ',num2str(wafer.weight),' Kg'],...
-                ['F_{nesting} = ',num2str(norm(F_n)),' N'],...
-                ['F_{friction} = ',num2str(norm(wafer.weight*g*mu)),' N'],...
-                [''],...
-                ['F_1 = ',num2str(F(1,1)),' N'],...
-                ['F_2 = ',num2str(F(2,1)),' N'],...
-                ['F_3 = ',num2str(F(3,1)),' N']};
-            Text1 = annotation('textbox', [0.65, 0.2, 0.3, 0.65], 'String',str1,'FitBoxToText','on');
-            Plots = [Plots,Text1];
-        end
-        
-        % Update d arrow
-        if userSettings.plotd == true && userSettings.PlotKinematics == false
-            d = wafer.d;
-            if norm(d) ~= 0
-                d = userSettings.Amplification*wafer.d/norm(d);
-                X = [wafer.pos(1), wafer.pos(1) + d(1)];
-                Y = [wafer.pos(2),wafer.pos(2) + d(2)];
 
-                dplot = plot(ax1,X,Y,'r');
-                Plots = [Plots, dplot];
+            % Plot the objective function to show convexity!
+            if userSettings.plotObjective == true
+                    n = 50;
+                    input = linspace(-5,5,n);
+                    objectivePlot = zeros(n);
+                    waferCopy = copy(wafer);
+                    for i = 1:n
+                        for j = 1:n
+                            objectivePlot(i,j) = objective([input(i),input(j)]',waferCopy,pin1,pin2);
+                        end
+                    end
+                    figure();
+                    xlabel('pin1 direction [mm]')
+                    ylabel('pin23 direction [mm]')
+                    zlabel('Total separation [mm]')
+                    surf(input,input,objectivePlot)
+                    pause(2);
             end
-        end
 
-        % Housekeeping
-        if userSettings.pauseStart == true && userSettings.animate == true
-            if T == T_v(1)
-                disp('Press any key to continue!')
-                pause;
+            % Model contact kinematically!
+            if userSettings.PlotContact == true 
+                % Initialisations & Preliminaries
+                Iter = 0;
+                contact1 = false;
+                contact23 = false;
+                pin1.color = 'c';
+                pin2.color = 'c';
+                pin3.color = 'c';
+                contactTol = userSettings.contactTol;
+
+                % Look for direction to move the wafer
+                while contact1 || contact23 || Iter == 0                        % While there is still contact somewhere
+
+                    % Detect contact 1 and find direction
+                    [separation1, d1] = sep1(wafer,pin1);                       % Homecooked function
+                    if separation1 < -contactTol                    % Overlap! 
+                        pin1.color = 'r';
+                        contact1 = true;
+                    else                                                        % No overlap
+                        d1 = [0,0]';
+                        contact1 = false;
+                    end
+
+                    % Detect contact 2 & 3 and find direction
+                    [separation23,d23] = sep23(wafer,pin2);                     % Homecooked function
+                    if separation23 < -contactTol                   % Overlap!
+                        pin2.color = 'r';
+                        pin3.color = 'r';
+                        contact23 = true;
+                    else % No overlap
+                        d23 = [0,0]';
+                        contact23 = false;           
+                    end
+
+                    %Determine move!
+                    if contact1 && contact23
+                        options = optimset('TolX',contactTol,...
+                                           'TolFun',contactTol,...
+                                           'maxFunEvals',1000);
+                        [d,fval,exitflag] = fminsearch(@(d)objective(d,wafer,pin1,pin2),[0,0]',options);
+                        if fval >= userSettings.contactTol
+                            warning(['Not properly optimised! fval = ',num2str(fval)])
+                        end
+                    elseif contact1 && ~contact23
+                        d = d1;
+                    elseif ~contact1 && contact23
+                        d = d23;
+                    else
+                        d = [0,0]';
+                    end
+
+                    wafer.move(d,0);
+                    wafer.TC = wafer.TC + d;
+
+                    % Save last d
+                    if norm(d) ~= 0
+                        wafer.d = d;
+                    end
+
+                    Iter = Iter+1;
+                end
             end
+
+            % Kill old bodies
+            if userSettings.animate == true  
+                pause(0.001)
+                delete(Plots);
+            elseif userSettings.animate == false
+                if size(Plots,2) >= 2
+                    delete(Plots(end-1:end));
+                end
+            end
+            if userSettings.Plot == true
+                % Make new bodies
+                    % Bodies
+                    for i = 1:size(bodies,2)
+                        Plots = [Plots, bodies{i}.show(ax1)];
+                    end    
+
+                    % Cones and lines
+                    if userSettings.PlotKinematics == true
+
+                        % Plot & calculate nesting force line
+                        if strcmp(userSettings.nestingForce,'YES')
+                            F_f = wafer.weight*g*mu*wafer.d/norm(wafer.d);
+
+                            movementLine = infLine(ax1,[0,0],wafer.d,'--g');
+                            Plots = [Plots,movementLine];
+
+                            nestingForceLine = infLine(ax1,[0,0],F_n,'--m');
+                            Plots = [Plots,nestingForceLine];
+
+                            F_n_eff = F_n' + F_f;
+                            effectiveForceLine = infLine(ax1,[0,0],F_n_eff,'--r');
+                            Plots = [Plots,effectiveForceLine];
+                        end
+
+
+                        F = Force_analysis_f(wafer, pin1, pin2, pin3, F_n, mu);
+                        coneAngle = atand(mu);                                      % Sorry, didn't know it was this easy...
+
+                        % If pin 1 contact
+                        if strcmp(pin1.color,'r')
+                            pin1Cone = frictionCone(ax1, pin1, pin1.pos, wafer.pos, pin1.pos, coneAngle);
+                            Plots = [Plots,pin1Cone];
+                        end
+
+                        % If pin 2 contact
+                        if strcmp(pin2.color,'r')
+                            pin2Cone = frictionCone(ax1, pin2, pin2.pos, [0,pin2.pos(2)]', pin2.pos,coneAngle);
+                            pin3Cone = frictionCone(ax1, pin3, pin3.pos, [0,pin3.pos(2)]', pin3.pos,coneAngle);
+                            Plots = [Plots,pin2Cone,pin3Cone];
+                        end
+                    end
+
+                % Update text
+                separation4 = sep1(wafer,pin4);
+                if userSettings.PlotContact == true
+                    str1 = {['T = ',num2str(round(T,2)),' K']...
+                        ['sep1 = ',num2str(separation1),' mm'],...
+                        ['sep23 = ',num2str(separation23),' mm'],...
+                        [''],...
+                        ['Wafer position :'],...
+                        ['x = ',num2str(wafer.pos(1)),' mm'],...
+                        ['y = ',num2str(wafer.pos(2)),' mm'],...
+                        [''],...
+                        ['Weight = ',num2str(wafer.weight),' Kg'],...
+                        ['F_{nesting} = ',num2str(norm(F_n)),' N'],...
+                        ['F_{friction} = ',num2str(norm(wafer.weight*g*mu)),' N'],...
+                        [''],...
+                        ['F_1 = ',num2str(F(1,1)),' N'],...
+                        ['F_2 = ',num2str(F(2,1)),' N'],...
+                        ['F_3 = ',num2str(F(3,1)),' N']};
+                    Text1 = annotation('textbox', [0.65, 0.2, 0.3, 0.65], 'String',str1,'FitBoxToText','on');
+                    Plots = [Plots,Text1];
+                end
+
+                % Update d arrow
+                if userSettings.plotd == true && userSettings.PlotKinematics == false
+                    d = wafer.d;
+                    if norm(d) ~= 0
+                        d = userSettings.Amplification*wafer.d/norm(d);
+                        X = [wafer.pos(1), wafer.pos(1) + d(1)];
+                        Y = [wafer.pos(2),wafer.pos(2) + d(2)];
+
+                        dplot = plot(ax1,X,Y,'r');
+                        Plots = [Plots, dplot];
+                    end
+                end
+                drawnow;
+            end
+
+            % Housekeeping
+            if userSettings.pauseStart == true && userSettings.animate == true
+                if T == T_v(1)
+                    disp('Press any key to continue!')
+                    pause;
+                end
+            end     
+        end     % Analysis loop
+
+        if userSettings.metaAnalysis == true
+            displacements(:,l) = wafer.pos - wafer.pos0; 
+            disp(['LOOOPING, Iteration: ',num2str(l)])
+            disp(['d = [',num2str(displacements(1,l)),', ',num2str(displacements(2,l)),']'])
         end
-    end
+    end     % Meta analysis
+     
     
+    
+%% Meta Analysis result visualisations
+if userSettings.metaAnalysis == true
+    ds = vecnorm(displacements,1);
+    
+    figure()
+    hold on
+    grid on
+    xlim([min(theta),max(theta)])
+    ylim([0,max(ds)])
+    xlabel('Pin 1 angle [deg]')
+    ylabel('Wafer displacement [mm]')
+    title('Wafer displacement as a function of pin 1 angle')
+    plot(theta,ds,'k');
+end
+   
 %% Force analysis
 if userSettings.PlotPin1Force == true
     N = userSettings.N;
