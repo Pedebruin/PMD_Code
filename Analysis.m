@@ -57,10 +57,10 @@ g = 9.813;
     userSettings.PlotNames = true;              % Show the names of the bodies?
     userSettings.plotObjective = false;         % FOR DEBUGGING, Objective function of fminsearch
     userSettings.plotd = false;                 % Plot the displacement direction d (only when plotKinematics is false)
-    userSettings.plotRing = false;              % Show the ring around the pins? (maybe for sanity check or somehing)
+    userSettings.plotRing = true;              % Show the ring around the pins? (maybe for sanity check or somehing)
     userSettings.pauseStart = false;            % Pause before the start of the simulation
     userSettings.metaAnalysis = false;           % [MAY TAKE LONG] Run analysis loop multiple times??? (k to be precise) ALso turns off other setings!
-        userSettings.k = 20;                    % Amount of meta analysis loops
+        userSettings.k = 100;                    % Amount of meta analysis loops
         
 %% Important parameters
     % Placement error
@@ -102,6 +102,7 @@ g = 9.813;
     wafer.weight = (wafer.R/1000)^2*pi*wafer.h*wafer.rho;
     wafer.d = [0,0]';
     wafer.userData = flatAngle;
+    wafer.E = 180E6;
     
 % Placement error!    
     wafer.move(userSettings.Amplification*err,0);
@@ -112,7 +113,7 @@ g = 9.813;
     material = 'Copper';
     alpha_L = @alphaCopper;
     pinRadius = 12;                                                         % mm
-    d_pins = 50;                                                            % Distance between pin 2&3
+    d_pins = 90;                                                            % Distance between pin 2&3
    
     % Pin locations
     pos_pin1 = R(pin1Angle)*[waferRadius+pinRadius,0]';
@@ -121,7 +122,7 @@ g = 9.813;
     
     % PIN 4
     initSpace = [0,0]';
-    pin4Angle = -45;
+    pin4Angle = -25;
     pos_pin4 = R(pin4Angle)*[waferRadius+pinRadius,0]' + initSpace;
     
     % Pin shape
@@ -135,6 +136,7 @@ g = 9.813;
     pin4 = body('pin 4', Pos_pin, pos_pin4, alpha_L, material, pinRadius, 'c', userSettings); 
     
     pin1.theta = pin1Angle;
+    pin1.E = 117E6;
     pin4.theta = pin4Angle;
     
     % Create Ring
@@ -147,16 +149,16 @@ g = 9.813;
     ring = body('Ring', Pos_ring, pos_ring, alpha_L, material, ringOuterRadius, [0.9290, 0.6940, 0.1250], userSettings); 
 
     if userSettings.plotRing == true
-        bodies = {wafer, pin1, pin2, pin3, ring};                                     % Package bodies it for easy looping
+        bodies = {wafer, pin1, pin2, pin3, pin4, ring};                                     % Package bodies it for easy looping
     else
         bodies = {wafer, pin1, pin2, pin3};
     end
-    
-    
+
 % Save initial body configuration
     for i = 1:length(bodies)
         bodies{i}.save()
     end
+    
     
     
 %% Termal cooldown analysis
@@ -169,9 +171,7 @@ g = 9.813;
     F_n = F_n_mag*[cosd(F_n_ang), sind(F_n_ang)];
     if F_n_mag <= wafer.weight*g*mu && strcmp(userSettings.nestingForce,'F_n')
         warning(['Nesting force lower then friction force on wafer! ',num2str(F_n_mag),' < ',num2str(wafer.weight*g*mu)])
-    end
-
-
+    end    
     
 % If metaAnalysis is turned on!
     if userSettings.metaAnalysis == true
@@ -249,11 +249,14 @@ g = 9.813;
                         end
                     end
                     figure();
-                    xlabel('pin1 direction [mm]')
-                    ylabel('pin23 direction [mm]')
-                    zlabel('Total separation [mm]')
+                    hold on
+                    grid on
+                    ax = gca;
+                    xlabel(ax,'pin1 direction [mm]')
+                    ylabel(ax,'pin23 direction [mm]')
+                    zlabel(ax,'Total separation [mm]')
                     surf(input,input,objectivePlot)
-                    pause(2);
+                   % pause();
             end
 
             % Model contact kinematically!
@@ -354,10 +357,20 @@ g = 9.813;
                             Plots = [Plots,effectiveForceLine];
                         end
 
-
-                        F = Force_analysis_f(wafer, pin1, pin2, pin3, F_n, mu);
+                        % Analyse forces on pins
+                        F = Force_analysis_f(wafer, pin1, pin2, pin3, F_n_eff, mu);
                         coneAngle = atand(mu);                                      % Sorry, didn't know it was this easy...
 
+                        % Contact stiffness calculation
+                        Racc = 1/(1/wafer.R+1/pin1.R)/2;
+                        Eacc = 1/(((1-wafer.nu^2)/(2*wafer.E))+((1-pin1.nu^2)/(2*pin1.E)));
+                        delta1 = (F(1,1)^2/(2*Racc*Eacc^2))^1/3;
+                        delta2 = (F(2,1)^2/(2*Racc*Eacc^2))^1/3;
+                        delta3 = (F(3,1)^2/(2*Racc*Eacc^2))^1/3;
+                        
+                        % Find current distance between ring and wafer
+                        springd = norm(pin4.pos-wafer.pos)-wafer.R;
+                        
                         % If pin 1 contact
                         if strcmp(pin1.color,'r')
                             pin1Cone = frictionCone(ax1, pin1, pin1.pos, wafer.pos, pin1.pos, coneAngle);
@@ -389,8 +402,13 @@ g = 9.813;
                         [''],...
                         ['F_1 = ',num2str(F(1,1)),' N'],...
                         ['F_2 = ',num2str(F(2,1)),' N'],...
-                        ['F_3 = ',num2str(F(3,1)),' N']};
-                    Text1 = annotation('textbox', [0.65, 0.2, 0.3, 0.65], 'String',str1,'FitBoxToText','on');
+                        ['F_3 = ',num2str(F(3,1)),' N'],...
+                        [''],...
+                        ['\delta_1 = ',num2str(delta1*10^3),' mm'],...
+                        ['\delta_2 = ',num2str(delta2*10^3),' mm'],...
+                        ['\delta_3 = ',num2str(delta3*10^3),' mm'],...
+                        ['Spring dist = ',num2str(springd),' mm']};
+                    Text1 = annotation('textbox', [0.65, 0.3, 0.3, 0.65], 'String',str1,'FitBoxToText','on');
                     Plots = [Plots,Text1];
                 end
 

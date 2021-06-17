@@ -7,12 +7,14 @@ classdef body < handle & dynamicprops & matlab.mixin.Copyable
         h;                              % Height of the body
         R;                              % Radius of the body (assuming everything is round)
         rho;
+        E;                              % E modulus
+        nu = 0.3;                       % Poisson ratio
         pos0 = [0, 0]';
         T0;              % Initial temperature
         T;              % Current temperature
         pos      = [0, 0]';             % Center position
         theta    = 0;                   % Angle with the horizontal (cc positive) [rad]
-        Pos      = 10*[-1 1 1 -1;       % Outline of the body at 0,0 ([x;y])
+        Pos      = [-1 1 1 -1;       % Outline of the body at 0,0 ([x;y])
                        -1 -1 1 1];
         TC       = [0, 0]';             % Thermal center of the body
         userData;
