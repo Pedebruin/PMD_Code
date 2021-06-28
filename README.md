@@ -2,10 +2,11 @@
 This repository is made to support the design project for the course ME46015 - Precision Mechanism Design 2020/2021 at the Delft University of Technology. 
 The code is entirely written and mainained by: 
 
-  Jos Boetzkes  
-  Thami Fischer
-  Mansour Khaleqi
-  Olivia Taal
+  -Jos Boetzkes  
+  -Pim de Bruin
+  -Thami Fischer
+  -Mansour Khaleqi
+  -Olivia Taal
 
 For questions or comments contact 'P.E.deBruin@student.tudelft.nl'
 
