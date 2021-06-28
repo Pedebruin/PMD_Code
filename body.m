@@ -153,9 +153,9 @@ classdef body < handle & dynamicprops & matlab.mixin.Copyable
             
             % Plot thermal center
             if obj.userSettings.PlotTC == true
-                P2 = plot(axName,obj.TC(1),obj.TC(2),'*','Color',obj.color);
-                P3 = text(axName,obj.TC(1)+10,obj.TC(2),'TC','Color',obj.color);
-                P = [P, P2, P3];
+                P2 = plot(axName,obj.TC(1),obj.TC(2),'o','Color',obj.color);
+                %P3 = text(axName,obj.TC(1)+10,obj.TC(2),'TC','Color',obj.color);
+                P = [P, P2];
             end
             
             % Plot names
