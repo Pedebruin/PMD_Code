@@ -20,7 +20,7 @@ For questions or comments contact 'P.E.deBruin@student.tudelft.nl'
   are most interesting to change. Along with `userSettings.Amplification` 
   + `body.m`  
   This file contains the class defenition for the class `body` which is used for all objects in the simulation. 
-  + `Force_analysis_f`  
+  + `Force_analysis_f.m`  
   This file contains the force model that maps the input nesting force to a force on the three pins. 
   + materialModels  
    Folder containing the material models used in the simulation and development. These models are linear and nonlinear thermal expansion coefficient model functions with the temperature as input, and the instantanious thermal expansion coeeficient as output. 
