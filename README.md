@@ -1,5 +1,5 @@
 # PMD_Code
-This repository is made to support the design project of groun A3 for the course ME46015 - Precision Mechanism Design 2020/2021 at the Delft University of Technology. 
+This repository is made to support the design project of group A3 for the course ME46015 - Precision Mechanism Design 2020/2021 at the Delft University of Technology. 
 The code is entirely written and mainained by: 
 
   + Jos Boetzkes 
