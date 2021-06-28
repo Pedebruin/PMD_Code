@@ -25,4 +25,4 @@ For questions or comments contact 'P.E.deBruin@student.tudelft.nl'
   + materialModels  
    Folder containing the material models used in the simulation and development. These models are linear and nonlinear thermal expansion coefficient model functions with the temperature as input, and the instantanious thermal expansion coeeficient as output. 
   
-  To see the simulation, it is sufficient to open `Analysis.m` and run it with default parameters. 
+  To see the simulation, it is sufficient to open `Analysis.m` and run it with default parameters (uses an amplification of 25X).  
