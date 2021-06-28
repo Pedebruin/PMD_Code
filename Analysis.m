@@ -47,9 +47,9 @@ g = 9.813;
         userSettings.T1 = 0.0015;               % [K] To ending tempeature
         userSettings.N = 100;                   % Amount of steps from T0 to T1
         userSettings.contactTol = 1e-10;        % mm to assume contact. 
-    userSettings.Amplification = 1;           % Amplifies the schrink with a factor A for all bodies.
+    userSettings.Amplification = 50;           % Amplifies the schrink with a factor A for all bodies.
     userSettings.PlotPin1Force = false;          % Plot the force in pin 1 as a function of pin1 angle.
-    userSettings.PlotMaterials = false;         % Show separate material model plot?
+    userSettings.PlotMaterials = true;         % Show separate material model plot?
     userSettings.PlotContact = true;            % Move the wafer with the contact pins?
     userSettings.PlotKinematics = true;         % Show kinematic analysis lines and cones and stuff
     userSettings.nestingForce = 'YES';          % Plot the nesting force lines? (external, friction and effective) 
@@ -58,7 +58,7 @@ g = 9.813;
     userSettings.plotObjective = false;         % FOR DEBUGGING, Objective function of fminsearch
     userSettings.plotd = false;                 % Plot the displacement direction d (only when plotKinematics is false)
     userSettings.plotRing = true;              % Show the ring around the pins? (maybe for sanity check or somehing)
-    userSettings.pauseStart = false;            % Pause before the start of the simulation
+    userSettings.pauseStart = true;            % Pause before the start of the simulation
     userSettings.metaAnalysis = false;           % [MAY TAKE LONG] Run analysis loop multiple times??? (k to be precise) ALso turns off other setings!
         userSettings.k = 100;                    % Amount of meta analysis loops
         
@@ -149,7 +149,7 @@ g = 9.813;
     ring = body('Ring', Pos_ring, pos_ring, alpha_L, material, ringOuterRadius, [0.9290, 0.6940, 0.1250], userSettings); 
 
     if userSettings.plotRing == true
-        bodies = {wafer, pin1, pin2, pin3, pin4, ring};                                     % Package bodies it for easy looping
+        bodies = {wafer, pin1, pin2, pin3, ring};                                     % Package bodies it for easy looping
     else
         bodies = {wafer, pin1, pin2, pin3};
     end

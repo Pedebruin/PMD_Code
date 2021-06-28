@@ -26,7 +26,6 @@ phi = -atand(F_n(2)/F_n(1));        % angle bewteen nesting force F_n and positi
 
 F_n = norm(F_n);                    % nesting force [N]
 
-
 if F_n == 0
     F = [0, 0, 0;
         0, 0, 0]';
